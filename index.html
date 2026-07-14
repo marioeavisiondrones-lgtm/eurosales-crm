@@ -459,6 +459,8 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
 .stat-icon.red { background: var(--red-100); color: var(--red-500); }
 .stat-icon.purple { background: #e0e7ff; color: #6366f1; }
 .stat-icon.green { background: #d1fae5; color: #059669; }
+.stat-card.clickable { cursor: pointer; transition: transform var(--transition), box-shadow var(--transition); }
+.stat-card.clickable:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,.08); }
 
 /* 仪表盘工具栏 */
 .dashboard-toolbar {
@@ -1361,29 +1363,23 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
           </div>
         </div>
         <div class="dashboard-grid" id="statCards">
-          <div class="stat-card">
+          <div class="stat-card clickable" data-dash="total">
             <div class="stat-icon blue">&#x1F4CC;</div>
             <div class="label">总客户数</div>
             <div class="value" id="statTotal">0</div>
             <div class="sub">全部意向客户</div>
           </div>
-          <div class="stat-card">
+          <div class="stat-card clickable" data-dash="active">
             <div class="stat-icon amber">&#x1F504;</div>
             <div class="label">进行中</div>
             <div class="value" id="statActive">0</div>
             <div class="sub">未签约也非流失</div>
           </div>
-          <div class="stat-card">
+          <div class="stat-card clickable" data-dash="orders">
             <div class="stat-icon emerald">&#x1F4B0;</div>
             <div class="label">预计订单数量</div>
             <div class="value" id="statBudget">0 单</div>
             <div class="sub">按计划成交时间统计</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon red">&#x1F4C8;</div>
-            <div class="label">转化率</div>
-            <div class="value" id="statRate">0%</div>
-            <div class="sub">签约 / (签约+流失)</div>
           </div>
         </div>
         <div class="dashboard-bottom">
@@ -1701,6 +1697,24 @@ Modal - 账号管理 (新增/编辑)
     <div class="modal-footer">
       <button class="btn btn-ghost" id="salesModalCancelBtn">取消</button>
       <button class="btn btn-primary" id="salesModalSaveBtn">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================
+Modal - 仪表盘下钻列表
+============================================ -->
+<div class="modal-overlay" id="dashDrillModal">
+  <div class="modal" style="max-width:600px;">
+    <div class="modal-header">
+      <h3 id="dashDrillTitle">客户列表</h3>
+      <button class="modal-close" id="dashDrillCloseBtn">&times;</button>
+    </div>
+    <div class="modal-body" style="max-height:420px;overflow-y:auto;padding:16px 24px;">
+      <div id="dashDrillList"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="dashDrillCloseModalBtn">关闭</button>
     </div>
   </div>
 </div>
@@ -2186,14 +2200,10 @@ function renderDashboard() {
   orderQty += customers.filter(function(c) {
     return c.stage === 'signed';
   }).reduce(function(s, c) { return s + (Number(c.quarterlyPlanQty) || 0); }, 0);
-  const signed = customers.filter(function(c) { return c.stage === 'signed'; }).length;
-  const lost = 0; // 新阶段无流失
-  const rate = signed > 0 ? 100 : 0;
 
   document.getElementById('statTotal').textContent = total;
   document.getElementById('statActive').textContent = active;
   document.getElementById('statBudget').textContent = orderQty + ' \u5355';
-  document.getElementById('statRate').textContent = rate + '%';
   renderFunnel(customers);
   renderActivities();
 }
@@ -2263,6 +2273,63 @@ function renderCooperation() {
   });
   html += '</tbody></table>';
   wrap.innerHTML = html;
+}
+
+// ============================================
+// 仪表盘下钻 - 点击统计卡片查看客户列表
+// ============================================
+function openDashDrill(type) {
+  var df = getDashboardDateFilter();
+  var customers = filterByDate(getVisibleCustomers(), df.from, df.to);
+  var list = [];
+  var title = '';
+
+  if (type === 'total') {
+    title = '\u5168\u90E8\u5BA2\u6237 (' + customers.length + ')';
+    list = customers;
+  } else if (type === 'active') {
+    list = customers.filter(function(c) { return ACTIVE_STAGES.includes(c.stage); });
+    title = '\u8FDB\u884C\u4E2D\u5BA2\u6237 (' + list.length + ')';
+  } else if (type === 'orders') {
+    // 进行中客户（有预计成交时间，首提数量>0）+ 已签约客户（本季度计划出货>0）
+    var part1 = customers.filter(function(c) { return ACTIVE_STAGES.includes(c.stage) && c.estimatedCloseDate; });
+    var part2 = customers.filter(function(c) { return c.stage === 'signed' && (c.quarterlyPlanQty || 0) > 0; });
+    // 合并去重
+    var ids = {};
+    part1.forEach(function(c) { ids[c.id] = true; });
+    part2.forEach(function(c) { ids[c.id] = true; });
+    list = [];
+    customers.forEach(function(c) { if (ids[c.id]) list.push(c); });
+    title = '\u9884\u8BA1\u4EA7\u751F\u8BA2\u5355\u7684\u5BA2\u6237 (' + list.length + ')';
+  }
+
+  document.getElementById('dashDrillTitle').textContent = title;
+  var container = document.getElementById('dashDrillList');
+
+  if (!list.length) {
+    container.innerHTML = '<div class="empty-state" style="padding:40px 0;"><div class="empty-icon">\u{1F50D}</div><h3>\u65E0\u6570\u636E</h3></div>';
+    document.getElementById('dashDrillModal').classList.add('active');
+    return;
+  }
+
+  var html = '<table class="list-table" style="font-size:.82rem;"><thead><tr><th>\u516C\u53F8</th><th>\u8054\u7CFB\u4EBA</th><th>\u9636\u6BB5</th><th>\u5E74\u6846</th><th>\u8D1F\u8D23\u4EBA</th></tr></thead><tbody>';
+  list.forEach(function(c) {
+    var u = getUserName(c.assignedTo || c.createdBy);
+    html += '<tr>' +
+      '<td>' + (c.companyName || '') + '</td>' +
+      '<td>' + (c.contactName || '') + '</td>' +
+      '<td><span class="stage-badge ' + getStageBadgeClass(c.stage) + '">' + getStageIcon(c.stage) + ' ' + getStageLabel(c.stage) + '</span></td>' +
+      '<td>' + ((c.annualQty || 0) > 0 ? c.annualQty + ' \u53F0' : '\u2014') + '</td>' +
+      '<td>' + u + '</td>' +
+    '</tr>';
+  });
+  html += '</tbody></table>';
+  container.innerHTML = html;
+  document.getElementById('dashDrillModal').classList.add('active');
+}
+
+function closeDashDrill() {
+  document.getElementById('dashDrillModal').classList.remove('active');
 }
 
 function renderActivities() {
@@ -2900,6 +2967,16 @@ document.addEventListener('DOMContentLoaded', async function() {
     document.getElementById('signedFieldShipped').style.display = isSigned ? '' : 'none';
     document.getElementById('signedFieldPlan').style.display = isSigned ? '' : 'none';
   });
+
+  // 仪表盘下钻 - 点击统计卡片
+  document.querySelectorAll('.stat-card.clickable').forEach(function(card) {
+    card.addEventListener('click', function() {
+      openDashDrill(this.dataset.dash);
+    });
+  });
+  // 下钻弹窗关闭
+  document.getElementById('dashDrillCloseBtn').addEventListener('click', closeDashDrill);
+  document.getElementById('dashDrillCloseModalBtn').addEventListener('click', closeDashDrill);
 
   document.getElementById('addCustomerBtn').addEventListener('click', openAddModal);
 
