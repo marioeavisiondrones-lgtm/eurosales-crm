@@ -1,0 +1,2052 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EuroSales CRM · 欧洲销售客户管理系统</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<style>
+/* ============================================
+   CSS 变量 & 设计系统
+   ============================================ */
+:root {
+  --navy-900: #0c1222;
+  --navy-800: #111827;
+  --navy-700: #1e293b;
+  --navy-600: #334155;
+  --navy-500: #475569;
+  --navy-400: #64748b;
+  --navy-300: #94a3b8;
+  --navy-200: #cbd5e1;
+  --navy-100: #e2e8f0;
+  --navy-50: #f1f5f9;
+  --amber-600: #d97706;
+  --amber-500: #f59e0b;
+  --amber-400: #fbbf24;
+  --amber-100: #fef3c7;
+  --amber-50: #fffbeb;
+  --emerald-500: #10b981;
+  --emerald-100: #d1fae5;
+  --red-500: #ef4444;
+  --red-100: #fee2e2;
+  --blue-500: #3b82f6;
+  --blue-100: #dbeafe;
+  --white: #ffffff;
+  --bg: #f8fafc;
+  --card-shadow: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  --card-shadow-hover: 0 10px 25px -5px rgba(0,0,0,.08), 0 8px 10px -6px rgba(0,0,0,.02);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --radius-lg: 16px;
+  --sidebar-w: 240px;
+  --header-h: 64px;
+  --font-display: 'Plus Jakarta Sans', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+  --transition: .25s cubic-bezier(.4,0,.2,1);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 15px; }
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--navy-800);
+  overflow: hidden;
+  height: 100vh;
+}
+a { text-decoration: none; color: inherit; }
+button { cursor: pointer; font-family: inherit; }
+input, textarea, select { font-family: inherit; font-size: inherit; }
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--navy-200); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--navy-300); }
+
+/* ============================================
+   登录页
+   ============================================ */
+.login-page {
+  display: flex;
+  min-height: 100vh;
+  background: linear-gradient(135deg, var(--navy-900) 0%, var(--navy-800) 50%, #0f1a2e 100%);
+  position: relative;
+  overflow: hidden;
+}
+.login-page::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 20% 50%, rgba(217,119,6,.08) 0%, transparent 50%),
+              radial-gradient(ellipse at 80% 20%, rgba(59,130,246,.06) 0%, transparent 50%);
+  pointer-events: none;
+}
+.login-left {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 80px 60px;
+  max-width: 560px;
+}
+.login-left .brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 48px;
+}
+.login-left .brand-icon {
+  width: 44px; height: 44px;
+  background: linear-gradient(135deg, var(--amber-500), var(--amber-600));
+  border-radius: var(--radius);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; color: var(--white); font-weight: 800;
+  box-shadow: 0 8px 24px rgba(217,119,6,.3);
+}
+.login-left .brand-text {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.3rem;
+  color: var(--white);
+  letter-spacing: -.01em;
+}
+.login-left .brand-text span { color: var(--amber-400); }
+.login-left h1 {
+  font-family: var(--font-display);
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--white);
+  line-height: 1.2;
+  margin-bottom: 16px;
+  letter-spacing: -.02em;
+}
+.login-left p {
+  color: var(--navy-300);
+  font-size: 1.05rem;
+  line-height: 1.6;
+  margin-bottom: 40px;
+  max-width: 420px;
+}
+.login-right {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}
+.login-card {
+  background: rgba(255,255,255,.04);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: var(--radius-lg);
+  padding: 48px 40px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 25px 50px -12px rgba(0,0,0,.5);
+}
+.login-card h2 {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  color: var(--white);
+  margin-bottom: 8px;
+}
+.login-card .subtitle {
+  color: var(--navy-300);
+  font-size: .9rem;
+  margin-bottom: 32px;
+}
+.role-btn-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+.role-btn {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: var(--radius-sm);
+  background: rgba(255,255,255,.03);
+  color: var(--navy-200);
+  font-size: .95rem;
+  font-weight: 500;
+  transition: all var(--transition);
+  text-align: left;
+  cursor: pointer;
+}
+.role-btn:hover {
+  background: rgba(255,255,255,.08);
+  border-color: rgba(255,255,255,.2);
+  color: var(--white);
+}
+.role-btn.active {
+  border-color: var(--amber-500);
+  background: rgba(217,119,6,.12);
+  color: var(--amber-400);
+}
+.role-btn .role-indicator {
+  width: 36px; height: 36px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  background: rgba(255,255,255,.06);
+  flex-shrink: 0;
+}
+.role-btn .role-info { flex: 1; }
+.role-btn .role-info .role-name { font-weight: 600; }
+.role-btn .role-info .role-desc { font-size: .78rem; color: var(--navy-400); font-weight: 400; }
+.role-btn .role-check {
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  border: 2px solid var(--navy-500);
+  display: flex; align-items: center; justify-content: center;
+  transition: all var(--transition);
+  flex-shrink: 0;
+}
+.role-btn.active .role-check {
+  border-color: var(--amber-500);
+  background: var(--amber-500);
+}
+.role-btn.active .role-check::after {
+  content: '\2713';
+  color: var(--navy-900);
+  font-size: 12px;
+  font-weight: 700;
+}
+.login-btn {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, var(--amber-500), var(--amber-600));
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--white);
+  font-size: 1rem;
+  font-weight: 600;
+  font-family: var(--font-display);
+  transition: all var(--transition);
+  box-shadow: 0 4px 14px rgba(217,119,6,.25);
+}
+.login-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(217,119,6,.35); }
+.login-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+/* ============================================
+   主应用布局
+   ============================================ */
+.app-layout { display: none; height: 100vh; }
+.app-layout.active { display: flex; }
+.sidebar {
+  width: var(--sidebar-w);
+  background: var(--navy-900);
+  color: var(--white);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 10;
+}
+.sidebar-brand {
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+  height: var(--header-h);
+}
+.sidebar-brand .brand-icon {
+  width: 34px; height: 34px;
+  background: linear-gradient(135deg, var(--amber-500), var(--amber-600));
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 17px; color: var(--white); font-weight: 800;
+}
+.sidebar-brand .brand-text {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.05rem;
+  letter-spacing: -.01em;
+}
+.sidebar-brand .brand-text span { color: var(--amber-400); }
+.sidebar-nav {
+  flex: 1;
+  padding: 12px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  color: var(--navy-300);
+  font-size: .9rem;
+  font-weight: 500;
+  transition: all var(--transition);
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  text-align: left;
+}
+.nav-item:hover { background: rgba(255,255,255,.06); color: var(--navy-100); }
+.nav-item.active { background: rgba(217,119,6,.12); color: var(--amber-400); }
+.nav-item .nav-icon {
+  width: 20px; height: 20px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+.nav-item .badge {
+  margin-left: auto;
+  background: rgba(255,255,255,.1);
+  padding: 1px 8px;
+  border-radius: 10px;
+  font-size: .75rem;
+  font-weight: 600;
+  color: var(--navy-200);
+}
+.nav-item.active .badge { background: rgba(217,119,6,.2); color: var(--amber-300); }
+.sidebar-footer {
+  padding: 12px 10px;
+  border-top: 1px solid rgba(255,255,255,.06);
+}
+.user-mini {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  background: rgba(255,255,255,.04);
+}
+.user-mini .avatar {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--amber-500), var(--amber-600));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; color: var(--white);
+  flex-shrink: 0;
+}
+.user-mini .info { flex: 1; min-width: 0; }
+.user-mini .info .name { font-size: .82rem; font-weight: 600; color: var(--navy-100); }
+.user-mini .info .role { font-size: .72rem; color: var(--navy-400); }
+.logout-btn {
+  background: none; border: none;
+  color: var(--navy-400);
+  font-size: 18px;
+  padding: 4px;
+  cursor: pointer;
+  transition: color var(--transition);
+}
+.logout-btn:hover { color: var(--red-500); }
+.main-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: var(--bg);
+}
+.topbar {
+  height: var(--header-h);
+  padding: 0 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--white);
+  border-bottom: 1px solid var(--navy-100);
+  flex-shrink: 0;
+}
+.topbar h2 {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--navy-800);
+}
+.topbar .actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.page-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 28px;
+}
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border-radius: var(--radius-sm);
+  font-size: .88rem;
+  font-weight: 600;
+  transition: all var(--transition);
+  border: none;
+  cursor: pointer;
+}
+.btn-primary {
+  background: var(--navy-800);
+  color: var(--white);
+}
+.btn-primary:hover { background: var(--navy-700); }
+.btn-amber {
+  background: linear-gradient(135deg, var(--amber-500), var(--amber-600));
+  color: var(--white);
+  box-shadow: 0 4px 12px rgba(217,119,6,.2);
+}
+.btn-amber:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(217,119,6,.3); }
+.btn-ghost {
+  background: transparent;
+  color: var(--navy-500);
+  border: 1px solid var(--navy-200);
+}
+.btn-ghost:hover { background: var(--navy-50); }
+.btn-sm { padding: 6px 12px; font-size: .82rem; }
+.btn-icon {
+  width: 36px; height: 36px;
+  padding: 0;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--navy-200);
+  background: var(--white);
+  color: var(--navy-500);
+  font-size: 16px;
+  transition: all var(--transition);
+}
+.btn-icon:hover { background: var(--navy-50); }
+.btn-danger {
+  background: var(--red-500);
+  color: var(--white);
+}
+.btn-danger:hover { background: #dc2626; }
+.page { display: none; }
+.page.active { display: block; }
+
+/* 仪表盘 */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.stat-card {
+  background: var(--white);
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: var(--card-shadow);
+  border: 1px solid var(--navy-100);
+  transition: box-shadow var(--transition);
+}
+.stat-card:hover { box-shadow: var(--card-shadow-hover); }
+.stat-card .label {
+  font-size: .82rem;
+  color: var(--navy-400);
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+.stat-card .value {
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--navy-800);
+  line-height: 1.1;
+}
+.stat-card .sub { font-size: .8rem; color: var(--navy-400); margin-top: 4px; }
+.stat-card .stat-icon {
+  float: right;
+  width: 40px; height: 40px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+}
+.stat-icon.blue { background: var(--blue-100); color: var(--blue-500); }
+.stat-icon.amber { background: var(--amber-100); color: var(--amber-500); }
+.stat-icon.emerald { background: var(--emerald-100); color: var(--emerald-500); }
+.stat-icon.red { background: var(--red-100); color: var(--red-500); }
+.dashboard-bottom {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.card {
+  background: var(--white);
+  border-radius: var(--radius);
+  box-shadow: var(--card-shadow);
+  border: 1px solid var(--navy-100);
+  overflow: hidden;
+}
+.card-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--navy-100);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.card-header h3 {
+  font-family: var(--font-display);
+  font-size: .95rem;
+  font-weight: 700;
+  color: var(--navy-800);
+}
+.card-body { padding: 16px 20px; }
+.funnel-bar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 8px 0;
+}
+.funnel-bar:not(:last-child) { border-bottom: 1px solid var(--navy-50); }
+.funnel-bar .stage-label {
+  width: 100px;
+  font-size: .82rem;
+  font-weight: 500;
+  color: var(--navy-600);
+  flex-shrink: 0;
+}
+.funnel-bar .stage-count {
+  width: 36px;
+  font-size: .85rem;
+  font-weight: 700;
+  color: var(--navy-800);
+  text-align: right;
+  flex-shrink: 0;
+}
+.funnel-bar .bar-track {
+  flex: 1;
+  height: 8px;
+  background: var(--navy-100);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.funnel-bar .bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width .6s cubic-bezier(.4,0,.2,1);
+}
+.funnel-bar .bar-fill.active { background: linear-gradient(90deg, var(--amber-500), var(--amber-400)); }
+.funnel-bar .bar-fill.won { background: linear-gradient(90deg, var(--emerald-500), #34d399); }
+.funnel-bar .bar-fill.lost { background: var(--navy-300); }
+.activity-list { list-style: none; }
+.activity-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 0;
+}
+.activity-item:not(:last-child) { border-bottom: 1px solid var(--navy-50); }
+.activity-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  margin-top: 6px;
+  flex-shrink: 0;
+}
+.activity-dot.lead { background: var(--blue-500); }
+.activity-dot.negotiation { background: var(--amber-500); }
+.activity-dot.won { background: var(--emerald-500); }
+.activity-dot.lost { background: var(--red-500); }
+.activity-text { flex: 1; font-size: .85rem; color: var(--navy-600); line-height: 1.4; }
+.activity-text strong { color: var(--navy-800); }
+.activity-time { font-size: .75rem; color: var(--navy-400); white-space: nowrap; flex-shrink: 0; }
+
+/* Kanban */
+.kanban-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.kanban-toolbar .filters {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.filter-select {
+  padding: 6px 12px;
+  border: 1px solid var(--navy-200);
+  border-radius: var(--radius-sm);
+  font-size: .85rem;
+  color: var(--navy-600);
+  background: var(--white);
+  outline: none;
+}
+.filter-select:focus { border-color: var(--amber-500); }
+.kanban-board {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  padding-bottom: 12px;
+  min-height: calc(100vh - 200px);
+  align-items: flex-start;
+}
+.kanban-col {
+  min-width: 260px;
+  max-width: 260px;
+  flex-shrink: 0;
+  background: var(--navy-50);
+  border-radius: var(--radius);
+  border: 1px solid var(--navy-100);
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 200px);
+}
+.kanban-col-header {
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--navy-100);
+  flex-shrink: 0;
+}
+.kanban-col-header .col-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: .85rem;
+  font-weight: 600;
+  color: var(--navy-700);
+}
+.kanban-col-header .col-count {
+  font-size: .75rem;
+  font-weight: 600;
+  color: var(--navy-400);
+  background: var(--navy-100);
+  padding: 1px 8px;
+  border-radius: 10px;
+}
+.kanban-col-body {
+  padding: 10px;
+  flex: 1;
+  overflow-y: auto;
+  min-height: 100px;
+}
+.kanban-col-body.drag-over { background: rgba(217,119,6,.06); border-radius: 6px; }
+.kanban-card {
+  background: var(--white);
+  border-radius: var(--radius-sm);
+  padding: 14px;
+  margin-bottom: 8px;
+  box-shadow: 0 1px 2px rgba(0,0,0,.04);
+  border: 1px solid var(--navy-100);
+  cursor: grab;
+  transition: all var(--transition);
+  position: relative;
+}
+.kanban-card:hover {
+  box-shadow: var(--card-shadow-hover);
+  border-color: var(--navy-200);
+  transform: translateY(-1px);
+}
+.kanban-card.dragging { opacity: .5; transform: rotate(2deg); }
+.kanban-card .card-company {
+  font-weight: 600;
+  font-size: .9rem;
+  color: var(--navy-800);
+  margin-bottom: 4px;
+}
+.kanban-card .card-contact { font-size: .8rem; color: var(--navy-400); margin-bottom: 8px; }
+.kanban-card .card-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: .78rem;
+}
+.kanban-card .card-budget { font-weight: 600; color: var(--navy-700); }
+.kanban-card .card-owner { color: var(--navy-400); display: flex; align-items: center; gap: 4px; }
+.kanban-card .card-blocker {
+  margin-top: 8px;
+  padding: 4px 8px;
+  background: var(--red-100);
+  color: var(--red-500);
+  border-radius: 4px;
+  font-size: .75rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.kanban-card .card-actions {
+  position: absolute;
+  top: 8px; right: 8px;
+  display: flex;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity var(--transition);
+}
+.kanban-card:hover .card-actions { opacity: 1; }
+.kanban-card .card-actions button {
+  width: 26px; height: 26px;
+  border: none;
+  border-radius: 4px;
+  background: var(--navy-50);
+  color: var(--navy-500);
+  font-size: 13px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.kanban-card .card-actions button:hover { background: var(--navy-200); color: var(--navy-800); }
+.kanban-card .card-actions .del-btn:hover { background: var(--red-100); color: var(--red-500); }
+.empty-col { padding: 40px 16px; text-align: center; color: var(--navy-400); font-size: .85rem; }
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.5);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 20px;
+}
+.modal-overlay.active { display: flex; }
+.modal {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 25px 50px -12px rgba(0,0,0,.3);
+  animation: modalIn .3s cubic-bezier(.4,0,.2,1);
+}
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(.95) translateY(10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+.modal-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--navy-100);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.modal-header h3 {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+.modal-close {
+  width: 32px; height: 32px;
+  border: none; background: none;
+  font-size: 20px; color: var(--navy-400);
+  cursor: pointer;
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all var(--transition);
+}
+.modal-close:hover { background: var(--navy-50); color: var(--navy-800); }
+.modal-body { padding: 24px; }
+.modal-footer {
+  padding: 16px 24px;
+  border-top: 1px solid var(--navy-100);
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.form-group { margin-bottom: 0; }
+.form-group.full { grid-column: 1/-1; }
+.form-group label {
+  display: block;
+  font-size: .82rem;
+  font-weight: 600;
+  color: var(--navy-600);
+  margin-bottom: 5px;
+}
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--navy-200);
+  border-radius: var(--radius-sm);
+  font-size: .9rem;
+  color: var(--navy-800);
+  background: var(--white);
+  outline: none;
+  transition: border-color var(--transition);
+}
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: var(--amber-500);
+  box-shadow: 0 0 0 3px rgba(217,119,6,.1);
+}
+.form-group textarea { resize: vertical; min-height: 72px; }
+
+/* 详情 */
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.detail-item .label {
+  font-size: .78rem;
+  color: var(--navy-400);
+  font-weight: 500;
+  margin-bottom: 2px;
+  text-transform: uppercase;
+  letter-spacing: .03em;
+}
+.detail-item .value {
+  font-size: .95rem;
+  color: var(--navy-800);
+  font-weight: 500;
+}
+.detail-item.full { grid-column: 1/-1; }
+.stage-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 4px;
+  font-size: .8rem;
+  font-weight: 600;
+}
+.stage-badge.lead { background: var(--blue-100); color: var(--blue-500); }
+.stage-badge.initial_contact { background: #e0e7ff; color: #6366f1; }
+.stage-badge.needs_analysis { background: #fce7f3; color: #ec4899; }
+.stage-badge.solution_quotation { background: var(--amber-100); color: var(--amber-600); }
+.stage-badge.negotiation { background: #fef3c7; color: #d97706; }
+.stage-badge.closed_won { background: var(--emerald-100); color: var(--emerald-500); }
+.stage-badge.closed_lost { background: var(--red-100); color: var(--red-500); }
+
+/* 列表 */
+.list-table-wrap { overflow-x: auto; }
+.list-table { width: 100%; border-collapse: collapse; }
+.list-table th {
+  text-align: left;
+  padding: 10px 14px;
+  font-size: .78rem;
+  font-weight: 600;
+  color: var(--navy-400);
+  text-transform: uppercase;
+  letter-spacing: .03em;
+  border-bottom: 2px solid var(--navy-100);
+  white-space: nowrap;
+}
+.list-table td {
+  padding: 12px 14px;
+  font-size: .88rem;
+  color: var(--navy-700);
+  border-bottom: 1px solid var(--navy-50);
+  white-space: nowrap;
+}
+.list-table tr { cursor: pointer; transition: background var(--transition); }
+.list-table tr:hover { background: var(--navy-50); }
+.list-table .company-cell { font-weight: 600; color: var(--navy-800); }
+
+/* 销售管理 */
+.sales-mgmt-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+.sales-card {
+  background: var(--white);
+  border-radius: var(--radius);
+  border: 1px solid var(--navy-100);
+  padding: 20px;
+  box-shadow: var(--card-shadow);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transition: box-shadow var(--transition);
+}
+.sales-card:hover { box-shadow: var(--card-shadow-hover); }
+.sales-card .s-avatar {
+  width: 48px; height: 48px;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; font-weight: 700; color: var(--white);
+  flex-shrink: 0;
+}
+.sales-card .s-avatar.manager { background: linear-gradient(135deg, var(--amber-500), var(--amber-600)); }
+.sales-card .s-avatar.sales { background: linear-gradient(135deg, var(--blue-500), #6366f1); }
+.sales-card .s-info { flex: 1; min-width: 0; }
+.sales-card .s-info .s-name { font-weight: 600; font-size: .95rem; color: var(--navy-800); }
+.sales-card .s-info .s-role-tag { font-size: .75rem; color: var(--navy-400); margin-top: 2px; }
+.sales-card .s-info .s-stats { font-size: .78rem; color: var(--navy-400); margin-top: 4px; }
+.sales-card .s-actions { display: flex; gap: 4px; }
+
+/* Toast */
+.toast-container {
+  position: fixed;
+  top: 20px; right: 20px;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.toast {
+  padding: 12px 18px;
+  border-radius: var(--radius-sm);
+  color: var(--white);
+  font-size: .88rem;
+  font-weight: 500;
+  box-shadow: 0 10px 25px -5px rgba(0,0,0,.15);
+  animation: toastIn .3s cubic-bezier(.4,0,.2,1);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.toast.success { background: var(--emerald-500); }
+.toast.error { background: var(--red-500); }
+.toast.info { background: var(--blue-500); }
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.toast-out { animation: toastOut .3s cubic-bezier(.4,0,.2,1) forwards; }
+@keyframes toastOut {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(20px); }
+}
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--navy-400);
+}
+.empty-state .empty-icon { font-size: 48px; margin-bottom: 16px; opacity: .5; }
+.empty-state h3 { font-size: 1.1rem; color: var(--navy-500); margin-bottom: 8px; }
+.empty-state p { font-size: .9rem; max-width: 360px; margin: 0 auto; }
+
+/* 响应式 */
+@media (max-width: 1200px) {
+  .dashboard-grid { grid-template-columns: repeat(2, 1fr); }
+  .dashboard-bottom { grid-template-columns: 1fr; }
+}
+@media (max-width: 768px) {
+  .login-left { display: none; }
+  .login-right { padding: 20px; }
+  .login-card { padding: 32px 24px; }
+  .sidebar { width: 64px; }
+  .sidebar-brand .brand-text,
+  .nav-item .nav-text,
+  .nav-item .badge,
+  .user-mini .info { display: none; }
+  .sidebar-brand { justify-content: center; }
+  .nav-item { justify-content: center; padding: 10px; }
+  .user-mini { justify-content: center; }
+  .logout-btn { display: none; }
+  .dashboard-grid { grid-template-columns: 1fr; }
+  .kanban-col { min-width: 220px; max-width: 220px; }
+  .form-grid { grid-template-columns: 1fr; }
+  .detail-grid { grid-template-columns: 1fr; }
+  .topbar { padding: 0 16px; }
+  .page-content { padding: 16px; }
+  .modal { max-width: 100%; margin: 10px; }
+  .sales-mgmt-grid { grid-template-columns: 1fr; }
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.page.active { animation: fadeIn .35s cubic-bezier(.4,0,.2,1); }
+.stat-card:nth-child(1) { animation: fadeIn .35s .05s both; }
+.stat-card:nth-child(2) { animation: fadeIn .35s .1s both; }
+.stat-card:nth-child(3) { animation: fadeIn .35s .15s both; }
+.stat-card:nth-child(4) { animation: fadeIn .35s .2s both; }
+</style>
+</head>
+<body>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ============================================
+登录页
+============================================ -->
+<div class="login-page" id="loginPage">
+  <div class="login-left">
+    <div class="brand">
+      <div class="brand-icon">ES</div>
+      <div class="brand-text">Euro<span>Sales</span> CRM</div>
+    </div>
+    <h1>欧洲销售<br>客户管理平台</h1>
+    <p>统一管理团队意向客户，实时追踪销售进度，洞察转化瓶颈，让每一笔生意都尽在掌握。</p>
+  </div>
+  <div class="login-right">
+    <div class="login-card">
+      <h2>欢迎回来</h2>
+      <p class="subtitle">选择你的角色进入系统</p>
+      <div class="role-btn-group" id="roleGroup"></div>
+      <button class="login-btn" id="loginBtn" disabled>进入系统</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================
+主应用布局
+============================================ -->
+<div class="app-layout" id="appLayout">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">ES</div>
+      <div class="brand-text">Euro<span>Sales</span></div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-item active" data-page="dashboard">
+        <span class="nav-icon">&#x1F4CA;</span>
+        <span class="nav-text">仪表盘</span>
+      </div>
+      <div class="nav-item" data-page="kanban">
+        <span class="nav-icon">&#x1F4CB;</span>
+        <span class="nav-text">看板</span>
+        <span class="badge" id="kanbanBadge">0</span>
+      </div>
+      <div class="nav-item" data-page="list">
+        <span class="nav-icon">&#x1F4DD;</span>
+        <span class="nav-text">客户列表</span>
+        <span class="badge" id="listBadge">0</span>
+      </div>
+      <div class="nav-item" data-page="sales-mgmt" id="navSalesMgmt" style="display:none;">
+        <span class="nav-icon">&#x1F465;</span>
+        <span class="nav-text">销售管理</span>
+        <span class="badge" id="salesMgmtBadge">0</span>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-mini">
+        <div class="avatar" id="userAvatar">?</div>
+        <div class="info">
+          <div class="name" id="userName">--</div>
+          <div class="role" id="userRole">--</div>
+        </div>
+        <button class="logout-btn" id="logoutBtn" title="退出登录">&#x23F0;</button>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main-area">
+    <header class="topbar">
+      <h2 id="pageTitle">仪表盘</h2>
+      <div class="actions">
+        <button class="btn btn-amber" id="addCustomerBtn">+ 新增客户</button>
+      </div>
+    </header>
+
+    <div class="page-content">
+
+      <!-- ========== 仪表盘 ========== -->
+      <div class="page active" id="page-dashboard">
+        <div class="dashboard-grid" id="statCards">
+          <div class="stat-card">
+            <div class="stat-icon blue">&#x1F4CC;</div>
+            <div class="label">总客户数</div>
+            <div class="value" id="statTotal">0</div>
+            <div class="sub">全部意向客户</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon amber">&#x1F504;</div>
+            <div class="label">进行中</div>
+            <div class="value" id="statActive">0</div>
+            <div class="sub">未成交也非流失</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon emerald">&#x1F4B0;</div>
+            <div class="label">预计金额</div>
+            <div class="value" id="statBudget">&euro;0</div>
+            <div class="sub">进行中客户预算总和</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon red">&#x1F4C8;</div>
+            <div class="label">转化率</div>
+            <div class="value" id="statRate">0%</div>
+            <div class="sub">成交 / (成交+流失)</div>
+          </div>
+        </div>
+        <div class="dashboard-bottom">
+          <div class="card">
+            <div class="card-header"><h3>&#x1F4CA; 销售漏斗</h3></div>
+            <div class="card-body" id="funnelContainer">
+              <div class="empty-state"><div class="empty-icon">&#x1F4ED;</div><h3>暂无客户数据</h3><p>点击右上角"新增客户"，开始录入你的第一批意向客户。</p></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><h3>&#x23F1; 最近活动</h3></div>
+            <div class="card-body" id="activityContainer">
+              <div class="empty-state"><div class="empty-icon">&#x1F4ED;</div><h3>暂无活动记录</h3><p>当你新增或更新客户后，最近操作会显示在这里。</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== Kanban 看板 ========== -->
+      <div class="page" id="page-kanban">
+        <div class="kanban-toolbar">
+          <div class="filters">
+            <select class="filter-select" id="kanbanSalesFilter"><option value="all">全部销售</option></select>
+            <select class="filter-select" id="kanbanDateFilter">
+              <option value="all">全部时间</option>
+              <option value="7">近7天</option>
+              <option value="30">近30天</option>
+              <option value="90">近90天</option>
+            </select>
+          </div>
+          <span style="font-size:.82rem;color:var(--navy-400);">&#x1F4A1; 拖拽卡片可变更客户阶段</span>
+        </div>
+        <div class="kanban-board" id="kanbanBoard"></div>
+      </div>
+
+      <!-- ========== 客户列表 ========== -->
+      <div class="page" id="page-list">
+        <div class="kanban-toolbar" style="margin-bottom:16px;">
+          <div class="filters">
+            <select class="filter-select" id="listSalesFilter"><option value="all">全部销售</option></select>
+            <select class="filter-select" id="listStageFilter"><option value="all">全部阶段</option></select>
+          </div>
+          <span style="font-size:.82rem;color:var(--navy-400);">共 <strong id="listCount">0</strong> 条客户</span>
+        </div>
+        <div class="card">
+          <div class="list-table-wrap" id="listTableWrap">
+            <div class="empty-state"><div class="empty-icon">&#x1F4CB;</div><h3>暂无客户数据</h3><p>点击右上角"新增客户"开始录入。</p></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== 销售管理 ========== -->
+      <div class="page" id="page-sales-mgmt">
+        <div class="kanban-toolbar" style="margin-bottom:16px;">
+          <span style="font-size:.82rem;color:var(--navy-400);">管理团队销售账号，共 <strong id="salesMgmtCount">0</strong> 人</span>
+          <button class="btn btn-amber" id="addSalesBtn">+ 添加销售</button>
+        </div>
+        <div class="sales-mgmt-grid" id="salesMgmtGrid"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ============================================
+Modal - 新增/编辑客户
+============================================ -->
+<div class="modal-overlay" id="customerModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modalTitle">新增客户</h3>
+      <button class="modal-close" id="modalCloseBtn">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form id="customerForm">
+        <input type="hidden" id="editId" value="">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>公司名称 *</label>
+            <input type="text" id="fCompany" required placeholder="e.g. GmbH, AG...">
+          </div>
+          <div class="form-group">
+            <label>联系人 *</label>
+            <input type="text" id="fContact" required placeholder="姓名">
+          </div>
+          <div class="form-group">
+            <label>联系电话</label>
+            <input type="text" id="fPhone" placeholder="+49 30 1234...">
+          </div>
+          <div class="form-group">
+            <label>邮箱</label>
+            <input type="email" id="fEmail" placeholder="contact@company.de">
+          </div>
+          <div class="form-group">
+            <label>所在国家</label>
+            <select id="fCountry">
+              <option value="">-- 选择 --</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>客户阶段</label>
+            <select id="fStage">
+              <option value="lead">线索</option>
+              <option value="initial_contact">初步接触</option>
+              <option value="needs_analysis">需求分析</option>
+              <option value="solution_quotation">方案报价</option>
+              <option value="negotiation">商务谈判</option>
+              <option value="closed_won">已成交</option>
+              <option value="closed_lost">已流失</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>预计金额 (&euro;)</label>
+            <input type="number" id="fBudget" min="0" step="1000" placeholder="50000">
+          </div>
+          <div class="form-group">
+            <label>预计成交时间</label>
+            <input type="date" id="fCloseDate">
+          </div>
+          <div class="form-group full">
+            <label>产品需求 / 意向产品</label>
+            <textarea id="fRequirement" rows="2" placeholder="客户感兴趣的产品或服务..."></textarea>
+          </div>
+          <div class="form-group full">
+            <label>当前卡点 / 障碍</label>
+            <textarea id="fBlocker" rows="2" placeholder="客户目前面临的顾虑或障碍，如预算、竞品、决策周期..."></textarea>
+          </div>
+          <div class="form-group full">
+            <label>跟进备注</label>
+            <textarea id="fNotes" rows="2" placeholder="最新的跟进情况、客户反馈等..."></textarea>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="modalCancelBtn">取消</button>
+      <button class="btn btn-primary" id="modalSaveBtn">保存客户</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================
+Modal - 客户详情
+============================================ -->
+<div class="modal-overlay" id="detailModal">
+  <div class="modal" style="max-width:520px;">
+    <div class="modal-header">
+      <h3 id="detailCompany">客户详情</h3>
+      <button class="modal-close" id="detailCloseBtn">&times;</button>
+    </div>
+    <div class="modal-body" id="detailBody">
+      <div class="detail-grid" id="detailGrid"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" id="detailEditBtn">&#x270F;&#xFE0F; 编辑</button>
+      <button class="btn btn-primary btn-sm" id="detailCloseModalBtn">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================
+Modal - 销售管理 (新增/编辑)
+============================================ -->
+<div class="modal-overlay" id="salesModal">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-header">
+      <h3 id="salesModalTitle">添加销售账号</h3>
+      <button class="modal-close" id="salesModalCloseBtn">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form id="salesForm">
+        <input type="hidden" id="salesEditId" value="">
+        <div class="form-grid">
+          <div class="form-group full">
+            <label>销售姓名 *</label>
+            <input type="text" id="fSalesName" required placeholder="e.g. 张三 / John Smith">
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="salesModalCancelBtn">取消</button>
+      <button class="btn btn-primary" id="salesModalSaveBtn">保存</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================
+// 欧洲国家列表（44个欧洲国家，完整）
+// ============================================
+const EUROPE_COUNTRIES = [
+  "阿尔巴尼亚","安道尔","奥地利","白俄罗斯","比利时","波斯尼亚和黑塞哥维那",
+  "保加利亚","克罗地亚","塞浦路斯","捷克","丹麦","爱沙尼亚","芬兰","法国",
+  "德国","希腊","匈牙利","冰岛","爱尔兰","意大利","拉脱维亚","列支敦士登",
+  "立陶宛","卢森堡","马耳他","摩尔多瓦","摩纳哥","黑山","荷兰","北马其顿",
+  "挪威","波兰","葡萄牙","罗马尼亚","圣马力诺","塞尔维亚","斯洛伐克","斯洛文尼亚",
+  "西班牙","瑞典","瑞士","乌克兰","英国","梵蒂冈"
+];
+
+// ============================================
+// 阶段定义
+// ============================================
+const STAGES = [
+  { id: 'lead', label: '线索', icon: '\u{1F4CC}' },
+  { id: 'initial_contact', label: '初步接触', icon: '\u{1F91D}' },
+  { id: 'needs_analysis', label: '需求分析', icon: '\u{1F50D}' },
+  { id: 'solution_quotation', label: '方案报价', icon: '\u{1F4C4}' },
+  { id: 'negotiation', label: '商务谈判', icon: '\u{1F4AC}' },
+  { id: 'closed_won', label: '已成交', icon: '\u2705' },
+  { id: 'closed_lost', label: '已流失', icon: '\u274C' }
+];
+const ACTIVE_STAGES = ['lead','initial_contact','needs_analysis','solution_quotation','negotiation'];
+
+// ============================================
+// API 封装 - 所有数据操作均通过 fetch 调用
+// ============================================
+const API_BASE = '';
+
+async function api(method, path, body) {
+  const opts = {
+    method,
+    headers: { 'Content-Type': 'application/json' }
+  };
+  if (body !== undefined) opts.body = JSON.stringify(body);
+  const res = await fetch(API_BASE + path, opts);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: res.statusText }));
+    throw new Error(err.error || 'API request failed');
+  }
+  return res.json();
+}
+
+// ============================================
+// 应用状态
+// ============================================
+let AppState = {
+  currentUser: null,
+  customers: [],
+  activities: [],
+  users: []
+};
+
+// ============================================
+// 辅助函数
+// ============================================
+function formatDate(iso) {
+  if (!iso) return '--';
+  const d = new Date(iso);
+  return (d.getMonth()+1) + '/' + d.getDate() + ' ' +
+    d.getHours().toString().padStart(2,'0') + ':' +
+    d.getMinutes().toString().padStart(2,'0');
+}
+
+function formatDateShort(iso) {
+  if (!iso) return '--';
+  const d = new Date(iso);
+  return d.getFullYear() + '-' +
+    (d.getMonth()+1).toString().padStart(2,'0') + '-' +
+    d.getDate().toString().padStart(2,'0');
+}
+
+function formatCurrency(n) {
+  if (!n) return '\u20AC0';
+  return '\u20AC' + Number(n).toLocaleString();
+}
+
+function getStageLabel(id) {
+  const s = STAGES.find(function(s) { return s.id === id; });
+  return s ? s.label : id;
+}
+
+function getStageIcon(id) {
+  const s = STAGES.find(function(s) { return s.id === id; });
+  return s ? s.icon : '\u{1F4CC}';
+}
+
+function getStageBadgeClass(id) { return id; }
+
+function getUserName(id) {
+  const u = AppState.users.find(function(s) { return s.id === id; });
+  return u ? u.name : '未知';
+}
+
+// ============================================
+// Toast 通知
+// ============================================
+function toast(msg, type) {
+  if (!type) type = 'success';
+  const c = document.getElementById('toastContainer');
+  const el = document.createElement('div');
+  el.className = 'toast ' + type;
+  el.textContent = msg;
+  c.appendChild(el);
+  setTimeout(function() {
+    el.classList.add('toast-out');
+    setTimeout(function() { el.remove(); }, 300);
+  }, 3000);
+}
+
+// ============================================
+// 数据加载 - 从 API 获取所有数据
+// ============================================
+async function loadAllData() {
+  try {
+    const [customers, activities, users] = await Promise.all([
+      api('GET', '/api/customers'),
+      api('GET', '/api/activities'),
+      api('GET', '/api/users')
+    ]);
+    AppState.customers = customers;
+    AppState.activities = activities;
+    AppState.users = users;
+    return true;
+  } catch (e) {
+    console.error('加载数据失败:', e);
+    toast('无法连接服务器，请检查后端是否运行', 'error');
+    return false;
+  }
+}
+
+// ============================================
+// 登录逻辑
+// ============================================
+let selectedRole = null;
+
+function renderLoginRoles() {
+  const container = document.getElementById('roleGroup');
+  container.innerHTML = '';
+  AppState.users.forEach(function(u) {
+    const el = document.createElement('div');
+    el.className = 'role-btn';
+    el.dataset.role = u.role;
+    el.dataset.id = u.id;
+    const roleName = u.role === 'manager' ? '\u8D1F\u8D23\u4EBA' : u.name;
+    const roleDesc = u.role === 'manager' ? '\u67E5\u770B\u6240\u6709\u5BA2\u6237\u6570\u636E\u4E0E\u770B\u677F' : '\u7BA1\u7406\u81EA\u5DF1\u7684\u5BA2\u6237\u6570\u636E';
+    el.innerHTML =
+      '<div class="role-indicator">\u{1F464}</div>' +
+      '<div class="role-info">' +
+        '<div class="role-name">' + roleName + '</div>' +
+        '<div class="role-desc">' + roleDesc + '</div>' +
+      '</div>' +
+      '<div class="role-check"></div>';
+    container.appendChild(el);
+  });
+  container.querySelectorAll('.role-btn').forEach(function(el) {
+    el.addEventListener('click', function() {
+      container.querySelectorAll('.role-btn').forEach(function(b) { b.classList.remove('active'); });
+      el.classList.add('active');
+      selectedRole = { id: parseInt(el.dataset.id), role: el.dataset.role };
+      document.getElementById('loginBtn').disabled = false;
+    });
+  });
+}
+
+async function login() {
+  if (!selectedRole) return;
+  const user = AppState.users.find(function(s) { return s.id === selectedRole.id; });
+  if (!user) return;
+  AppState.currentUser = user;
+  document.getElementById('loginPage').style.display = 'none';
+  document.getElementById('appLayout').classList.add('active');
+  renderUserInfo();
+  await initApp();
+}
+
+function logout() {
+  AppState.currentUser = null;
+  document.getElementById('appLayout').classList.remove('active');
+  document.getElementById('loginPage').style.display = 'flex';
+  selectedRole = null;
+  document.getElementById('loginBtn').disabled = true;
+  document.querySelectorAll('.role-btn').forEach(function(b) { b.classList.remove('active'); });
+}
+
+// ============================================
+// 用户信息
+// ============================================
+function renderUserInfo() {
+  const u = AppState.currentUser;
+  document.getElementById('userAvatar').textContent = u.avatar || u.name[0];
+  document.getElementById('userName').textContent = u.name;
+  document.getElementById('userRole').textContent = u.role === 'manager' ? '\u8D1F\u8D23\u4EBA' : '\u9500\u552E';
+}
+
+// ============================================
+// 导航
+// ============================================
+function navigate(page) {
+  document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+  document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); });
+  var pg = document.getElementById('page-' + page);
+  if (pg) pg.classList.add('active');
+  var nav = document.querySelector('.nav-item[data-page="' + page + '"]');
+  if (nav) nav.classList.add('active');
+  var titles = { dashboard: '\u4EEA\u8868\u76D8', kanban: '\u770B\u677F', list: '\u5BA2\u6237\u5217\u8868', 'sales-mgmt': '\u9500\u552E\u7BA1\u7406' };
+  document.getElementById('pageTitle').textContent = titles[page] || page;
+  if (page === 'dashboard') renderDashboard();
+  if (page === 'kanban') renderKanban();
+  if (page === 'list') renderList();
+  if (page === 'sales-mgmt') renderSalesMgmt();
+}
+
+// ============================================
+// 权限过滤
+// ============================================
+function getVisibleCustomers() {
+  const u = AppState.currentUser;
+  if (!u) return [];
+  if (u.role === 'manager') return AppState.customers;
+  return AppState.customers.filter(function(c) { return c.assignedTo === u.id || c.createdBy === u.id; });
+}
+
+function getFilteredCustomers() {
+  var list = getVisibleCustomers();
+  var sf = document.getElementById('kanbanSalesFilter').value;
+  if (sf !== 'all') list = list.filter(function(c) { return c.assignedTo === parseInt(sf) || c.createdBy === parseInt(sf); });
+  var df = document.getElementById('kanbanDateFilter').value;
+  if (df !== 'all') {
+    var cutoff = Date.now() - parseInt(df) * 86400000;
+    list = list.filter(function(c) { return new Date(c.createdAt).getTime() >= cutoff; });
+  }
+  return list;
+}
+
+// ============================================
+// 仪表盘
+// ============================================
+function renderDashboard() {
+  const customers = getVisibleCustomers();
+  const total = customers.length;
+  const active = customers.filter(function(c) { return ACTIVE_STAGES.includes(c.stage); }).length;
+  const totalBudget = customers.filter(function(c) { return ACTIVE_STAGES.includes(c.stage); }).reduce(function(s, c) { return s + (Number(c.budget) || 0); }, 0);
+  const won = customers.filter(function(c) { return c.stage === 'closed_won'; }).length;
+  const lost = customers.filter(function(c) { return c.stage === 'closed_lost'; }).length;
+  const rate = (won + lost) > 0 ? Math.round(won / (won + lost) * 100) : 0;
+
+  document.getElementById('statTotal').textContent = total;
+  document.getElementById('statActive').textContent = active;
+  document.getElementById('statBudget').textContent = formatCurrency(totalBudget);
+  document.getElementById('statRate').textContent = rate + '%';
+  renderFunnel(customers);
+  renderActivities();
+}
+
+function renderFunnel(customers) {
+  const container = document.getElementById('funnelContainer');
+  const maxCount = Math.max.apply(null, STAGES.map(function(s) { return customers.filter(function(c) { return c.stage === s.id; }).length; }), 1);
+  var html = '';
+  STAGES.forEach(function(s) {
+    const count = customers.filter(function(c) { return c.stage === s.id; }).length;
+    const pct = maxCount > 0 ? (count / maxCount * 100) : 0;
+    const barClass = s.id === 'closed_won' ? 'won' : s.id === 'closed_lost' ? 'lost' : 'active';
+    html +=
+      '<div class="funnel-bar">' +
+        '<span class="stage-label">' + s.icon + ' ' + s.label + '</span>' +
+        '<div class="bar-track"><div class="bar-fill ' + barClass + '" style="width:' + pct + '%"></div></div>' +
+        '<span class="stage-count">' + count + '</span>' +
+      '</div>';
+  });
+  container.innerHTML = html || '<div class="empty-state"><div class="empty-icon">\u{1F4ED}</div><h3>\u6682\u65E0\u6570\u636E</h3><p>\u5F55\u5165\u5BA2\u6237\u540E\uFF0C\u6F0F\u6597\u56FE\u5C06\u81EA\u52A8\u751F\u6210\u3002</p></div>';
+}
+
+function renderActivities() {
+  const container = document.getElementById('activityContainer');
+  const acts = AppState.activities.slice(-10).reverse();
+  if (!acts.length) {
+    container.innerHTML = '<div class="empty-state"><div class="empty-icon">\u{1F4ED}</div><h3>\u6682\u65E0\u6D3B\u52A8\u8BB0\u5F55</h3><p>\u65B0\u589E\u6216\u66F4\u65B0\u5BA2\u6237\u540E\uFF0C\u64CD\u4F5C\u8BB0\u5F55\u4F1A\u663E\u793A\u5728\u8FD9\u91CC\u3002</p></div>';
+    return;
+  }
+  var html = '<ul class="activity-list">';
+  acts.forEach(function(a) {
+    var dotClass = a.stage || 'lead';
+    html += '<li class="activity-item"><span class="activity-dot ' + dotClass + '"></span><span class="activity-text">' + (a.text || '') + '</span><span class="activity-time">' + formatDate(a.time) + '</span></li>';
+  });
+  html += '</ul>';
+  container.innerHTML = html;
+}
+
+async function addActivity(text, stage) {
+  try {
+    await api('POST', '/api/activities', { text: text, stage: stage || 'lead' });
+    AppState.activities = await api('GET', '/api/activities');
+  } catch (e) {
+    console.error('添加活动失败:', e);
+  }
+}
+
+// ============================================
+// Kanban 看板
+// ============================================
+var dragSrc = null;
+
+function renderKanban() {
+  const customers = getFilteredCustomers();
+  const board = document.getElementById('kanbanBoard');
+  var html = '';
+  STAGES.forEach(function(s) {
+    const cards = customers.filter(function(c) { return c.stage === s.id; });
+    html +=
+      '<div class="kanban-col" data-stage="' + s.id + '">' +
+        '<div class="kanban-col-header">' +
+          '<span class="col-title">' + s.icon + ' ' + s.label + '</span>' +
+          '<span class="col-count">' + cards.length + '</span>' +
+        '</div>' +
+        '<div class="kanban-col-body" data-stage="' + s.id + '">' +
+          (cards.length ? cards.map(function(c) { return renderKanbanCard(c); }).join('') : '<div class="empty-col">\u6682\u65E0\u5BA2\u6237</div>') +
+        '</div>' +
+      '</div>';
+  });
+  board.innerHTML = html;
+  document.getElementById('kanbanBadge').textContent = customers.length;
+  document.getElementById('listBadge').textContent = getVisibleCustomers().length;
+  setupDragDrop();
+}
+
+function renderKanbanCard(c) {
+  const u = getUserName(c.assignedTo || c.createdBy);
+  return (
+    '<div class="kanban-card" draggable="true" data-id="' + c.id + '">' +
+      '<div class="card-actions">' +
+        '<button class="edit-btn" data-id="' + c.id + '" title="\u7F16\u8F91">\u270F\uFE0F</button>' +
+        '<button class="del-btn" data-id="' + c.id + '" title="\u5220\u9664">\u2715</button>' +
+      '</div>' +
+      '<div class="card-company">' + (c.companyName || '') + '</div>' +
+      '<div class="card-contact">' + (c.contactName || '') + (c.phone ? ' \u00B7 ' + c.phone : '') + '</div>' +
+      '<div class="card-meta">' +
+        '<span class="card-budget">' + formatCurrency(c.budget) + '</span>' +
+        '<span class="card-owner">\u{1F464} ' + u + '</span>' +
+      '</div>' +
+      (c.blocker ? '<div class="card-blocker">\u26A0\uFE0F ' + c.blocker + '</div>' : '') +
+    '</div>'
+  );
+}
+
+function setupDragDrop() {
+  document.querySelectorAll('.kanban-card[draggable]').forEach(function(card) {
+    card.addEventListener('dragstart', function(e) {
+      dragSrc = card.dataset.id;
+      card.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    card.addEventListener('dragend', function(e) { card.classList.remove('dragging'); });
+    card.addEventListener('click', function(e) {
+      if (e.target.closest('.card-actions')) return;
+      showDetail(card.dataset.id);
+    });
+    var editBtn = card.querySelector('.edit-btn');
+    if (editBtn) {
+      editBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        openEditModal(card.dataset.id);
+      });
+    }
+    var delBtn = card.querySelector('.del-btn');
+    if (delBtn) {
+      delBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        deleteCustomer(card.dataset.id);
+      });
+    }
+  });
+  document.querySelectorAll('.kanban-col-body').forEach(function(col) {
+    col.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      col.classList.add('drag-over');
+    });
+    col.addEventListener('dragleave', function(e) { col.classList.remove('drag-over'); });
+    col.addEventListener('drop', function(e) {
+      e.preventDefault();
+      col.classList.remove('drag-over');
+      if (!dragSrc) return;
+      var stage = col.dataset.stage;
+      var c = AppState.customers.find(function(c) { return c.id === dragSrc; });
+      if (c && c.stage !== stage) {
+        c.stage = stage;
+        c.updatedAt = new Date().toISOString();
+        // 通过 API 更新
+        api('POST', '/api/customers', c).then(function() {
+          return api('POST', '/api/activities', {
+            text: getUserName(c.assignedTo || c.createdBy) + ' \u5C06 ' + c.companyName + ' \u79FB\u81F3' + getStageLabel(stage),
+            stage: stage
+          });
+        }).then(function() {
+          return api('GET', '/api/activities');
+        }).then(function(acts) {
+          AppState.activities = acts;
+          renderKanban();
+          if (document.getElementById('page-dashboard').classList.contains('active')) renderDashboard();
+          toast('\u5DF2\u79FB\u81F3\u300C' + getStageLabel(stage) + '\u300D');
+        }).catch(function(err) {
+          toast('\u66F4\u65B0\u5931\u8D25: ' + err.message, 'error');
+        });
+      }
+      dragSrc = null;
+    });
+  });
+}
+
+// ============================================
+// 客户列表
+// ============================================
+function renderList() {
+  var customers = getVisibleCustomers();
+  var sf = document.getElementById('listSalesFilter').value;
+  if (sf !== 'all') customers = customers.filter(function(c) { return c.assignedTo === parseInt(sf) || c.createdBy === parseInt(sf); });
+  var stf = document.getElementById('listStageFilter').value;
+  if (stf !== 'all') customers = customers.filter(function(c) { return c.stage === stf; });
+  document.getElementById('listCount').textContent = customers.length;
+  var wrap = document.getElementById('listTableWrap');
+  if (!customers.length) {
+    wrap.innerHTML = '<div class="empty-state"><div class="empty-icon">\u{1F4CB}</div><h3>\u6682\u65E0\u5BA2\u6237\u6570\u636E</h3><p>\u70B9\u51FB\u53F3\u4E0A\u89D2\u201C\u65B0\u589E\u5BA2\u6237\u201D\u5F00\u59CB\u5F55\u5165\u3002</p></div>';
+    return;
+  }
+  var html = '<table class="list-table"><thead><tr><th>\u516C\u53F8</th><th>\u8054\u7CFB\u4EBA</th><th>\u9636\u6BB5</th><th>\u9884\u7B97</th><th>\u5361\u70B9</th><th>\u8D1F\u8D23\u4EBA</th><th>\u5F55\u5165\u65F6\u95F4</th><th>\u64CD\u4F5C</th></tr></thead><tbody>';
+  customers.sort(function(a,b) { return new Date(b.createdAt) - new Date(a.createdAt); }).forEach(function(c) {
+    html += '<tr data-id="' + c.id + '">' +
+      '<td class="company-cell">' + (c.companyName || '') + '</td>' +
+      '<td>' + (c.contactName || '') + '</td>' +
+      '<td><span class="stage-badge ' + getStageBadgeClass(c.stage) + '">' + getStageIcon(c.stage) + ' ' + getStageLabel(c.stage) + '</span></td>' +
+      '<td>' + formatCurrency(c.budget) + '</td>' +
+      '<td>' + (c.blocker ? '\u26A0\uFE0F \u6709\u5361\u70B9' : '\u2014') + '</td>' +
+      '<td>' + getUserName(c.assignedTo || c.createdBy) + '</td>' +
+      '<td>' + formatDateShort(c.createdAt) + '</td>' +
+      '<td>' +
+        '<button class="btn btn-ghost btn-sm list-edit" data-id="' + c.id + '">\u270F\uFE0F</button> ' +
+        '<button class="btn btn-ghost btn-sm list-del" data-id="' + c.id + '" style="color:var(--red-500)">\u2715</button>' +
+      '</td>' +
+    '</tr>';
+  });
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+  wrap.querySelectorAll('tr[data-id]').forEach(function(tr) {
+    tr.addEventListener('click', function(e) {
+      if (e.target.closest('button')) return;
+      showDetail(tr.dataset.id);
+    });
+  });
+  wrap.querySelectorAll('.list-edit').forEach(function(btn) {
+    btn.addEventListener('click', function(e) { e.stopPropagation(); openEditModal(btn.dataset.id); });
+  });
+  wrap.querySelectorAll('.list-del').forEach(function(btn) {
+    btn.addEventListener('click', function(e) { e.stopPropagation(); deleteCustomer(btn.dataset.id); });
+  });
+}
+
+// ============================================
+// 客户 CRUD (全部通过 API)
+// ============================================
+function openAddModal() {
+  document.getElementById('modalTitle').textContent = '\u65B0\u589E\u5BA2\u6237';
+  document.getElementById('editId').value = '';
+  document.getElementById('customerForm').reset();
+  document.getElementById('fStage').value = 'lead';
+  document.getElementById('customerModal').classList.add('active');
+}
+
+function openEditModal(id) {
+  const c = AppState.customers.find(function(c) { return c.id === id; });
+  if (!c) return;
+  document.getElementById('modalTitle').textContent = '\u7F16\u8F91\u5BA2\u6237';
+  document.getElementById('editId').value = id;
+  document.getElementById('fCompany').value = c.companyName || '';
+  document.getElementById('fContact').value = c.contactName || '';
+  document.getElementById('fPhone').value = c.phone || '';
+  document.getElementById('fEmail').value = c.email || '';
+  document.getElementById('fCountry').value = c.country || '';
+  document.getElementById('fStage').value = c.stage || 'lead';
+  document.getElementById('fBudget').value = c.budget || '';
+  document.getElementById('fCloseDate').value = c.estimatedCloseDate || '';
+  document.getElementById('fRequirement').value = c.productRequirement || '';
+  document.getElementById('fBlocker').value = c.blocker || '';
+  document.getElementById('fNotes').value = c.notes || '';
+  document.getElementById('customerModal').classList.add('active');
+}
+
+function closeModal() {
+  document.getElementById('customerModal').classList.remove('active');
+  document.getElementById('detailModal').classList.remove('active');
+  document.getElementById('salesModal').classList.remove('active');
+}
+
+async function saveCustomer() {
+  const id = document.getElementById('editId').value;
+  const data = {
+    companyName: document.getElementById('fCompany').value.trim(),
+    contactName: document.getElementById('fContact').value.trim(),
+    phone: document.getElementById('fPhone').value.trim(),
+    email: document.getElementById('fEmail').value.trim(),
+    country: document.getElementById('fCountry').value,
+    stage: document.getElementById('fStage').value,
+    budget: parseFloat(document.getElementById('fBudget').value) || 0,
+    estimatedCloseDate: document.getElementById('fCloseDate').value,
+    productRequirement: document.getElementById('fRequirement').value.trim(),
+    blocker: document.getElementById('fBlocker').value.trim(),
+    notes: document.getElementById('fNotes').value.trim()
+  };
+  if (!data.companyName || !data.contactName) {
+    toast('\u8BF7\u586B\u5199\u516C\u53F8\u540D\u79F0\u548C\u8054\u7CFB\u4EBA', 'error');
+    return;
+  }
+  const u = AppState.currentUser;
+  try {
+    if (id) {
+      data.id = id;
+      data.assignedTo = u.id;
+      data.createdBy = u.id;
+      await api('POST', '/api/customers', data);
+      await addActivity(u.name + ' \u66F4\u65B0\u4E86 ' + data.companyName + ' \u7684\u4FE1\u606F', data.stage);
+      toast('\u5BA2\u6237\u4FE1\u606F\u5DF2\u66F4\u65B0');
+    } else {
+      data.assignedTo = u.id;
+      data.createdBy = u.id;
+      await api('POST', '/api/customers', data);
+      await addActivity(u.name + ' \u65B0\u589E\u4E86\u5BA2\u6237 ' + data.companyName, data.stage);
+      toast('\u5BA2\u6237\u5DF2\u6210\u529F\u6DFB\u52A0');
+    }
+    // 重新加载客户数据
+    AppState.customers = await api('GET', '/api/customers');
+    closeModal();
+    refreshAll();
+  } catch (e) {
+    toast('\u4FDD\u5B58\u5931\u8D25: ' + e.message, 'error');
+  }
+}
+
+async function deleteCustomer(id) {
+  if (!confirm('\u786E\u5B9A\u8981\u5220\u9664\u8BE5\u5BA2\u6237\u5417\uFF1F\u6B64\u64CD\u4F5C\u4E0D\u53EF\u64A4\u9500\u3002')) return;
+  const c = AppState.customers.find(function(c) { return c.id === id; });
+  if (!c) return;
+  try {
+    await api('POST', '/api/customers', { action: 'delete', id: id });
+    await addActivity(AppState.currentUser.name + ' \u5220\u9664\u4E86\u5BA2\u6237 ' + c.companyName, 'lost');
+    AppState.customers = await api('GET', '/api/customers');
+    toast('\u5BA2\u6237\u5DF2\u5220\u9664');
+    refreshAll();
+  } catch (e) {
+    toast('\u5220\u9664\u5931\u8D25: ' + e.message, 'error');
+  }
+}
+
+function showDetail(id) {
+  const c = AppState.customers.find(function(c) { return c.id === id; });
+  if (!c) return;
+  document.getElementById('detailCompany').textContent = c.companyName || '\u5BA2\u6237\u8BE6\u60C5';
+  const grid = document.getElementById('detailGrid');
+  const u = getUserName(c.assignedTo || c.createdBy);
+  grid.innerHTML =
+    '<div class="detail-item"><div class="label">\u8054\u7CFB\u4EBA</div><div class="value">' + (c.contactName || '--') + '</div></div>' +
+    '<div class="detail-item"><div class="label">\u8054\u7CFB\u65B9\u5F0F</div><div class="value">' + (c.phone || '--') + (c.email ? ' \u00B7 ' + c.email : '') + '</div></div>' +
+    '<div class="detail-item"><div class="label">\u56FD\u5BB6</div><div class="value">' + (c.country || '--') + '</div></div>' +
+    '<div class="detail-item"><div class="label">\u5BA2\u6237\u9636\u6BB5</div><div class="value"><span class="stage-badge ' + getStageBadgeClass(c.stage) + '">' + getStageIcon(c.stage) + ' ' + getStageLabel(c.stage) + '</span></div></div>' +
+    '<div class="detail-item"><div class="label">\u9884\u8BA1\u91D1\u989D</div><div class="value">' + formatCurrency(c.budget) + '</div></div>' +
+    '<div class="detail-item"><div class="label">\u9884\u8BA1\u6210\u4EA4</div><div class="value">' + (c.estimatedCloseDate || '--') + '</div></div>' +
+    '<div class="detail-item full"><div class="label">\u4EA7\u54C1\u9700\u6C42</div><div class="value">' + (c.productRequirement || '--') + '</div></div>' +
+    '<div class="detail-item full"><div class="label">\u5F53\u524D\u5361\u70B9</div><div class="value">' + (c.blocker || '\u65E0') + '</div></div>' +
+    '<div class="detail-item full"><div class="label">\u8DDF\u8FDB\u5907\u6CE8</div><div class="value">' + (c.notes || '\u65E0') + '</div></div>' +
+    '<div class="detail-item"><div class="label">\u8D1F\u8D23\u4EBA</div><div class="value">' + u + '</div></div>' +
+    '<div class="detail-item"><div class="label">\u5F55\u5165\u65F6\u95F4</div><div class="value">' + formatDateShort(c.createdAt) + '</div></div>';
+  document.getElementById('detailEditBtn').onclick = function() { closeModal(); openEditModal(id); };
+  document.getElementById('detailModal').classList.add('active');
+}
+
+// ============================================
+// 销售管理 (全部通过 API)
+// ============================================
+function renderSalesMgmt() {
+  const users = AppState.users;
+  const grid = document.getElementById('salesMgmtGrid');
+  document.getElementById('salesMgmtCount').textContent = users.length;
+  document.getElementById('salesMgmtBadge').textContent = users.length - 1;
+
+  var html = '';
+  users.forEach(function(u) {
+    const customerCount = AppState.customers.filter(function(c) { return c.assignedTo === u.id || c.createdBy === u.id; }).length;
+    const isManager = u.role === 'manager';
+    html +=
+      '<div class="sales-card">' +
+        '<div class="s-avatar ' + (isManager ? 'manager' : 'sales') + '">' + (u.avatar || u.name[0]) + '</div>' +
+        '<div class="s-info">' +
+          '<div class="s-name">' + u.name + '</div>' +
+          '<div class="s-role-tag">' + (isManager ? '\u{1F511} \u8D1F\u8D23\u4EBA\uFF08\u4E3B\u8D26\u53F7\uFF09' : '\u{1F464} \u9500\u552E') + '</div>' +
+          '<div class="s-stats">' + customerCount + ' \u4E2A\u5BA2\u6237</div>' +
+        '</div>' +
+        '<div class="s-actions">' +
+          (!isManager ?
+            '<button class="btn btn-ghost btn-sm edit-sales-btn" data-id="' + u.id + '" title="\u91CD\u547D\u540D">\u270F\uFE0F</button>' +
+            '<button class="btn btn-ghost btn-sm delete-sales-btn" data-id="' + u.id + '" title="\u5220\u9664" style="color:var(--red-500)">\u2715</button>'
+          : '') +
+        '</div>' +
+      '</div>';
+  });
+  grid.innerHTML = html;
+
+  grid.querySelectorAll('.edit-sales-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() { openEditSalesModal(parseInt(btn.dataset.id)); });
+  });
+  grid.querySelectorAll('.delete-sales-btn').forEach(function(btn) {
+    btn.addEventListener('click', async function() {
+      if (confirm('\u786E\u5B9A\u8981\u5220\u9664\u8BE5\u9500\u552E\u8D26\u53F7\u5417\uFF1F\u8BE5\u9500\u552E\u7684\u5BA2\u6237\u5C06\u81EA\u52A8\u8F6C\u79FB\u7ED9\u8D1F\u8D23\u4EBA\u3002')) {
+        try {
+          await api('POST', '/api/users', { action: 'delete', id: parseInt(btn.dataset.id) });
+          toast('\u9500\u552E\u8D26\u53F7\u5DF2\u5220\u9664');
+          // 重新加载数据
+          AppState.users = await api('GET', '/api/users');
+          AppState.customers = await api('GET', '/api/customers');
+          renderSalesMgmt();
+          refreshAll();
+          refreshSalesFilters();
+          renderLoginRoles();
+        } catch (e) {
+          toast('\u5220\u9664\u5931\u8D25: ' + e.message, 'error');
+        }
+      }
+    });
+  });
+}
+
+function openAddSalesModal() {
+  document.getElementById('salesModalTitle').textContent = '\u6DFB\u52A0\u9500\u552E\u8D26\u53F7';
+  document.getElementById('salesEditId').value = '';
+  document.getElementById('fSalesName').value = '';
+  document.getElementById('salesModal').classList.add('active');
+}
+
+function openEditSalesModal(id) {
+  const u = AppState.users.find(function(s) { return s.id === id; });
+  if (!u) return;
+  document.getElementById('salesModalTitle').textContent = '\u91CD\u547D\u540D\u9500\u552E';
+  document.getElementById('salesEditId').value = id;
+  document.getElementById('fSalesName').value = u.name;
+  document.getElementById('salesModal').classList.add('active');
+}
+
+async function saveSalesAccount() {
+  const id = document.getElementById('salesEditId').value;
+  const name = document.getElementById('fSalesName').value.trim();
+  if (!name) {
+    toast('\u8BF7\u8F93\u5165\u9500\u552E\u59D3\u540D', 'error');
+    return;
+  }
+  try {
+    if (id) {
+      await api('POST', '/api/users', { action: 'update', id: parseInt(id), name: name });
+      toast('\u9500\u552E\u59D3\u540D\u5DF2\u66F4\u65B0');
+    } else {
+      await api('POST', '/api/users', { action: 'add', name: name });
+      toast('\u9500\u552E\u8D26\u53F7\u5DF2\u6DFB\u52A0');
+    }
+    AppState.users = await api('GET', '/api/users');
+    closeModal();
+    renderSalesMgmt();
+    renderLoginRoles();
+    refreshSalesFilters();
+  } catch (e) {
+    toast('\u4FDD\u5B58\u5931\u8D25: ' + e.message, 'error');
+  }
+}
+
+// ============================================
+// 刷新筛选器
+// ============================================
+function refreshSalesFilters() {
+  const users = AppState.users.filter(function(u) { return u.role === 'sales'; });
+  ['kanbanSalesFilter', 'listSalesFilter'].forEach(function(id) {
+    const sel = document.getElementById(id);
+    if (sel) {
+      const val = sel.value;
+      sel.innerHTML = '<option value="all">\u5168\u90E8\u9500\u552E</option>';
+      users.forEach(function(u) {
+        sel.innerHTML += '<option value="' + u.id + '">' + u.name + '</option>';
+      });
+      sel.value = val;
+    }
+  });
+}
+
+// ============================================
+// 刷新
+// ============================================
+function refreshAll() {
+  const activePage = document.querySelector('.page.active');
+  if (activePage) {
+    const page = activePage.id.replace('page-', '');
+    if (page === 'dashboard') renderDashboard();
+    else if (page === 'kanban') renderKanban();
+    else if (page === 'list') renderList();
+    else if (page === 'sales-mgmt') renderSalesMgmt();
+  }
+  document.getElementById('kanbanBadge').textContent = getVisibleCustomers().length;
+  document.getElementById('listBadge').textContent = getVisibleCustomers().length;
+}
+
+// ============================================
+// 初始化
+// ============================================
+async function initApp() {
+  // 显示销售管理导航（仅负责人可见）
+  if (AppState.currentUser.role === 'manager') {
+    document.getElementById('navSalesMgmt').style.display = 'flex';
+  }
+  renderKanban();
+  renderDashboard();
+  renderList();
+  refreshSalesFilters();
+  // 填充阶段筛选
+  var sf3 = document.getElementById('listStageFilter');
+  sf3.innerHTML = '<option value="all">\u5168\u90E8\u9636\u6BB5</option>';
+  STAGES.forEach(function(s) {
+    sf3.innerHTML += '<option value="' + s.id + '">' + s.icon + ' ' + s.label + '</option>';
+  });
+  document.getElementById('kanbanDateFilter').onchange = renderKanban;
+  sf3.onchange = renderList;
+}
+
+// ============================================
+// 填充国家列表
+// ============================================
+function populateCountries() {
+  const sel = document.getElementById('fCountry');
+  EUROPE_COUNTRIES.forEach(function(c) {
+    var opt = document.createElement('option');
+    opt.value = c;
+    opt.textContent = c;
+    sel.appendChild(opt);
+  });
+}
+
+// ============================================
+// 事件绑定
+// ============================================
+document.addEventListener('DOMContentLoaded', async function() {
+  populateCountries();
+
+  // 从 API 加载所有数据
+  const loaded = await loadAllData();
+  if (!loaded) {
+    // 即使加载失败也显示登录页，让用户可以选择重试
+  }
+
+  renderLoginRoles();
+
+  document.getElementById('loginBtn').addEventListener('click', login);
+  document.getElementById('logoutBtn').addEventListener('click', logout);
+
+  document.querySelectorAll('.nav-item').forEach(function(item) {
+    item.addEventListener('click', function() { navigate(item.dataset.page); });
+  });
+
+  document.getElementById('addCustomerBtn').addEventListener('click', openAddModal);
+
+  // 客户 Modal
+  document.getElementById('modalCloseBtn').addEventListener('click', closeModal);
+  document.getElementById('modalCancelBtn').addEventListener('click', closeModal);
+  document.getElementById('modalSaveBtn').addEventListener('click', saveCustomer);
+  document.getElementById('detailCloseBtn').addEventListener('click', closeModal);
+  document.getElementById('detailCloseModalBtn').addEventListener('click', closeModal);
+
+  // 销售管理 Modal
+  document.getElementById('addSalesBtn').addEventListener('click', openAddSalesModal);
+  document.getElementById('salesModalCloseBtn').addEventListener('click', closeModal);
+  document.getElementById('salesModalCancelBtn').addEventListener('click', closeModal);
+  document.getElementById('salesModalSaveBtn').addEventListener('click', saveSalesAccount);
+
+  // 点击遮罩关闭
+  document.querySelectorAll('.modal-overlay').forEach(function(m) {
+    m.addEventListener('click', function(e) {
+      if (e.target === m) closeModal();
+    });
+  });
+
+  // 回车提交
+  document.getElementById('customerForm').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
+      e.preventDefault();
+      saveCustomer();
+    }
+  });
+  document.getElementById('salesForm').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      saveSalesAccount();
+    }
+  });
+});
+</script>
+</body>
+</html>
