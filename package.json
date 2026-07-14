@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "description": "EuroSales CRM - 欧洲销售客户管理系统",
+  "main": "server.js",
   "scripts": {
-    "dev": "iga pages dev",
-    "build": "iga pages build",
-    "deploy": "iga pages deploy"
+    "start": "node server.js",
+    "dev": "node server.js"
   }
 }
