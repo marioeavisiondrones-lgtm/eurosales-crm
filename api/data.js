@@ -236,6 +236,22 @@ async function handler(req, res) {
         break;
       }
 
+      // ========== 重置管理员密码 ==========
+      case 'reset-admin': {
+        if (req.method === 'POST') {
+          const users = getUsers();
+          const admin = users.find(u => u.id === 1);
+          if (admin) {
+            admin.password = 'admin123';
+            admin.mustChangePassword = true;
+            saveUsers(users);
+            return sendJSON(res, { success: true });
+          }
+          return sendJSON(res, { error: '管理员用户不存在' }, 404);
+        }
+        break;
+      }
+
       // ========== 用户管理 ==========
       case 'users': {
         let users = getUsers();
