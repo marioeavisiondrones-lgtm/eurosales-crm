@@ -1183,6 +1183,11 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
   padding: 12px;
 }
 
+.analysis-fields textarea {
+  border-left: 3px solid #f59e0b;
+  padding-left: 14px;
+}
+
 /* 响应式 */
 @media (max-width: 1200px) {
   .dashboard-grid { grid-template-columns: repeat(2, 1fr); }
@@ -1374,6 +1379,18 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
             <div class="label">进行中</div>
             <div class="value" id="statActive">0</div>
             <div class="sub">未签约也非流失</div>
+          </div>
+          <div class="stat-card clickable" data-dash="medium">
+            <div class="stat-icon" style="background:#fef3c7;color:#d97706;">&#x1F4AD;</div>
+            <div class="label">中意向客户</div>
+            <div class="value" id="statMedium">0</div>
+            <div class="sub">需求分析 & 价格磋商</div>
+          </div>
+          <div class="stat-card clickable" data-dash="high">
+            <div class="stat-icon" style="background:#fce7f3;color:#ec4899;">&#x{1F525};</div>
+            <div class="label">高意向客户</div>
+            <div class="value" id="statHigh">0</div>
+            <div class="sub">样机推进 & 签约中</div>
           </div>
           <div class="stat-card clickable" data-dash="orders">
             <div class="stat-icon emerald">&#x1F4B0;</div>
@@ -1618,6 +1635,14 @@ Modal - 新增/编辑客户
           <div class="form-group full">
             <label>产品需求 / 意向产品</label>
             <textarea id="fRequirement" rows="2" placeholder="客户感兴趣的产品或服务..."></textarea>
+          </div>
+          <div class="form-group full analysis-fields" id="analysisFieldCustomer" style="display:none;">
+            <label>客户分析</label>
+            <textarea id="fCustomerAnalysis" rows="2" placeholder="分析客户痛点、需求、决策链等..."></textarea>
+          </div>
+          <div class="form-group full analysis-fields" id="analysisFieldProb" style="display:none;">
+            <label>成交可能性分析</label>
+            <textarea id="fDealProbability" rows="2" placeholder="评估成交可能性、时间预期、风险因素等..."></textarea>
           </div>
           <div class="form-group full">
             <label>当前卡点 / 障碍</label>
@@ -2203,6 +2228,12 @@ function renderDashboard() {
 
   document.getElementById('statTotal').textContent = total;
   document.getElementById('statActive').textContent = active;
+  // 中意向：需求分析、价格磋商
+  var medium = customers.filter(function(c) { return c.stage === 'needs_analysis' || c.stage === 'price_negotiation'; }).length;
+  document.getElementById('statMedium').textContent = medium;
+  // 高意向：样机推进、签约中
+  var high = customers.filter(function(c) { return c.stage === 'prototype' || c.stage === 'contracting'; }).length;
+  document.getElementById('statHigh').textContent = high;
   document.getElementById('statBudget').textContent = orderQty + ' \u5355';
   renderFunnel(customers);
   renderActivities();
@@ -2301,6 +2332,12 @@ function openDashDrill(type) {
     list = [];
     customers.forEach(function(c) { if (ids[c.id]) list.push(c); });
     title = '\u9884\u8BA1\u4EA7\u751F\u8BA2\u5355\u7684\u5BA2\u6237 (' + list.length + ')';
+  } else if (type === 'medium') {
+    list = customers.filter(function(c) { return c.stage === 'needs_analysis' || c.stage === 'price_negotiation'; });
+    title = '\u4E2D\u610F\u5411\u5BA2\u6237 (' + list.length + ')';
+  } else if (type === 'high') {
+    list = customers.filter(function(c) { return c.stage === 'prototype' || c.stage === 'contracting'; });
+    title = '\u9AD8\u610F\u5411\u5BA2\u6237 (' + list.length + ')';
   }
 
   document.getElementById('dashDrillTitle').textContent = title;
@@ -2533,6 +2570,10 @@ function openAddModal() {
   document.getElementById('fFirstQty').value = '';
   document.getElementById('fShippedQty').value = '';
   document.getElementById('fQuarterlyPlanQty').value = '';
+  document.getElementById('fCustomerAnalysis').value = '';
+  document.getElementById('fDealProbability').value = '';
+  document.getElementById('analysisFieldCustomer').style.display = 'none';
+  document.getElementById('analysisFieldProb').style.display = 'none';
   document.getElementById('signedFieldShipped').style.display = 'none';
   document.getElementById('signedFieldPlan').style.display = 'none';
   document.getElementById('customerModal').classList.add('active');
@@ -2561,8 +2602,14 @@ function openEditModal(id) {
   document.getElementById('signedFieldShipped').style.display = isSigned ? '' : 'none';
   document.getElementById('signedFieldPlan').style.display = isSigned ? '' : 'none';
   document.getElementById('fRequirement').value = c.productRequirement || '';
+  document.getElementById('fCustomerAnalysis').value = c.customerAnalysis || '';
+  document.getElementById('fDealProbability').value = c.dealProbability || '';
   document.getElementById('fBlocker').value = c.blocker || '';
   document.getElementById('fNotes').value = c.notes || '';
+  // 编辑时根据阶段显示分析字段
+  var showAnalysis = c.stage !== 'first_reply' && c.stage !== 'signed';
+  document.getElementById('analysisFieldCustomer').style.display = showAnalysis ? '' : 'none';
+  document.getElementById('analysisFieldProb').style.display = showAnalysis ? '' : 'none';
   document.getElementById('customerModal').classList.add('active');
 }
 
@@ -2588,6 +2635,8 @@ async function saveCustomer() {
     shippedQty: parseInt(document.getElementById('fShippedQty').value) || 0,
     quarterlyPlanQty: parseInt(document.getElementById('fQuarterlyPlanQty').value) || 0,
     productRequirement: document.getElementById('fRequirement').value.trim(),
+    customerAnalysis: document.getElementById('fCustomerAnalysis').value.trim(),
+    dealProbability: document.getElementById('fDealProbability').value.trim(),
     blocker: document.getElementById('fBlocker').value.trim(),
     notes: document.getElementById('fNotes').value.trim()
   };
@@ -2653,6 +2702,8 @@ function showDetail(id) {
     (c.stage === 'signed' ? '<div class="detail-item"><div class="label">\u672C\u5B63\u5EA6\u8BA1\u5212\u51FA\u8D27</div><div class="value">' + ((c.quarterlyPlanQty || 0) > 0 ? c.quarterlyPlanQty + ' \u53F0' : '0 \u53F0') + '</div></div>' : '') +
     '<div class="detail-item"><div class="label">\u9884\u8BA1\u6210\u4EA4</div><div class="value">' + (c.estimatedCloseDate || '--') + '</div></div>' +
     '<div class="detail-item full"><div class="label">\u4EA7\u54C1\u9700\u6C42</div><div class="value">' + (c.productRequirement || '--') + '</div></div>' +
+    (c.customerAnalysis || c.stage !== 'first_reply' && c.stage !== 'signed' ? '<div class="detail-item full"><div class="label">\u5BA2\u6237\u5206\u6790</div><div class="value">' + (c.customerAnalysis || '\u65E0') + '</div></div>' : '') +
+    (c.dealProbability || c.stage !== 'first_reply' && c.stage !== 'signed' ? '<div class="detail-item full"><div class="label">\u6210\u4EA4\u53EF\u80FD\u6027\u5206\u6790</div><div class="value">' + (c.dealProbability || '\u65E0') + '</div></div>' : '') +
     '<div class="detail-item full"><div class="label">\u5F53\u524D\u5361\u70B9</div><div class="value">' + (c.blocker || '\u65E0') + '</div></div>' +
     '<div class="detail-item full"><div class="label">\u8DDF\u8FDB\u5907\u6CE8</div><div class="value">' + (c.notes || '\u65E0') + '</div></div>' +
     '<div class="detail-item"><div class="label">\u8D1F\u8D23\u4EBA</div><div class="value">' + u + '</div></div>' +
@@ -2961,11 +3012,15 @@ document.addEventListener('DOMContentLoaded', async function() {
     renderDashboard();
   });
 
-  // 客户阶段切换 - 显示/隐藏签约字段
+  // 客户阶段切换 - 显示/隐藏签约字段和分析字段
   document.getElementById('fStage').addEventListener('change', function() {
     var isSigned = this.value === 'signed';
     document.getElementById('signedFieldShipped').style.display = isSigned ? '' : 'none';
     document.getElementById('signedFieldPlan').style.display = isSigned ? '' : 'none';
+    // 分析字段：需求分析及以上阶段显示（非首次回复、非已签约）
+    var showAnalysis = this.value !== 'first_reply' && this.value !== 'signed';
+    document.getElementById('analysisFieldCustomer').style.display = showAnalysis ? '' : 'none';
+    document.getElementById('analysisFieldProb').style.display = showAnalysis ? '' : 'none';
   });
 
   // 仪表盘下钻 - 点击统计卡片
