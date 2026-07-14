@@ -746,6 +746,18 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
   align-items: center;
   gap: 4px;
 }
+.kanban-card .card-signed-info {
+  margin-top: 2px;
+  padding: 4px 8px;
+  background: var(--emerald-100);
+  color: var(--emerald-600);
+  border-radius: 4px;
+  font-size: .72rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
 .kanban-card .card-actions {
   position: absolute;
   top: 8px; right: 8px;
@@ -1417,6 +1429,18 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
             <div class="value" id="coopAnnualQty">0 台</div>
             <div class="sub">已签约客户年框合计</div>
           </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background:#dbeafe;color:#2563eb;">&#x1F69A;</div>
+            <div class="label">已出货数量</div>
+            <div class="value" id="coopShipped">0 台</div>
+            <div class="sub">已签约客户累计出货</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background:#fef3c7;color:#d97706;">&#x1F4C5;</div>
+            <div class="label">本季度计划出货</div>
+            <div class="value" id="coopQuarterlyPlan">0 台</div>
+            <div class="sub">本季度计划出货合计</div>
+          </div>
         </div>
         <div class="card">
           <div class="card-header"><h3>&#x1F4CB; 已签约客户明细</h3></div>
@@ -1586,6 +1610,14 @@ Modal - 新增/编辑客户
           <div class="form-group">
             <label>预计成交时间</label>
             <input type="date" id="fCloseDate">
+          </div>
+          <div class="form-group signed-only" id="signedFieldShipped" style="display:none;">
+            <label>已出货数量</label>
+            <input type="number" id="fShippedQty" min="0" step="1" placeholder="已向客户出货的台数">
+          </div>
+          <div class="form-group signed-only" id="signedFieldPlan" style="display:none;">
+            <label>本季度计划出货数量</label>
+            <input type="number" id="fQuarterlyPlanQty" min="0" step="1" placeholder="本季度计划出货台数">
           </div>
           <div class="form-group full">
             <label>产品需求 / 意向产品</label>
@@ -2142,10 +2174,18 @@ function renderDashboard() {
   var customers = filterByDate(getVisibleCustomers(), df.from, df.to);
   const total = customers.length;
   const active = customers.filter(function(c) { return ACTIVE_STAGES.includes(c.stage); }).length;
-  // 预计订单数量：按计划成交时间（estimatedCloseDate）在未来的进行中客户
-  var orderQty = customers.filter(function(c) {
+  // 预计订单数量：进行中客户按首提数量（有预计成交时间） + 已签约客户本季度计划出货数量
+  var orderQty = 0;
+  // 进行中客户：按首提数量，有预计成交时间
+  orderQty += customers.filter(function(c) {
     return ACTIVE_STAGES.includes(c.stage) && c.estimatedCloseDate;
-  }).reduce(function(s, c) { return s + (Number(c.annualQty) || 0); }, 0);
+  }).reduce(function(s, c) { return s + (Number(c.firstQty) || 0); }, 0);
+  // 已签约客户：本季度计划出货数量
+  var qStart = new Date(); qStart.setMonth(Math.floor(qStart.getMonth()/3)*3, 1); qStart.setHours(0,0,0,0);
+  var qEnd = new Date(qStart); qEnd.setMonth(qStart.getMonth()+3, 0); qEnd.setHours(23,59,59,0);
+  orderQty += customers.filter(function(c) {
+    return c.stage === 'signed';
+  }).reduce(function(s, c) { return s + (Number(c.quarterlyPlanQty) || 0); }, 0);
   const signed = customers.filter(function(c) { return c.stage === 'signed'; }).length;
   const lost = 0; // 新阶段无流失
   const rate = signed > 0 ? 100 : 0;
@@ -2194,6 +2234,10 @@ function renderCooperation() {
   document.getElementById('coopNewOrders').textContent = newOrders;
   document.getElementById('coopRate').textContent = avgRate > 0 ? avgRate + ' \u53F0/\u5E74' : '0%';
   document.getElementById('coopAnnualQty').textContent = annualTotal + ' \u53F0';
+  var shippedTotal = signed.reduce(function(s, c) { return s + (Number(c.shippedQty) || 0); }, 0);
+  var quarterlyPlanTotal = signed.reduce(function(s, c) { return s + (Number(c.quarterlyPlanQty) || 0); }, 0);
+  document.getElementById('coopShipped').textContent = shippedTotal + ' \u53F0';
+  document.getElementById('coopQuarterlyPlan').textContent = quarterlyPlanTotal + ' \u53F0';
 
   // 签约客户明细表格
   var wrap = document.getElementById('coopTableWrap');
@@ -2201,7 +2245,7 @@ function renderCooperation() {
     wrap.innerHTML = '<div class="empty-state"><div class="empty-icon">\u{1F4ED}</div><h3>\u6682\u65E0\u7B7E\u7EA6\u5BA2\u6237</h3><p>\u5BA2\u6237\u7B7E\u7EA6\u540E\uFF0C\u5408\u4F5C\u770B\u677F\u6570\u636E\u5C06\u81EA\u52A8\u66F4\u65B0\u3002</p></div>';
     return;
   }
-  var html = '<table class="coop-table"><thead><tr><th>\u516C\u53F8</th><th>\u8054\u7CFB\u4EBA</th><th>\u8054\u7CFB\u65B9\u5F0F</th><th>\u7B7E\u7EA6\u65F6\u95F4</th><th>\u5E74\u6846\u6570\u91CF</th><th>\u9996\u63D0\u53F0\u6570</th><th>\u8D1F\u8D23\u4EBA</th></tr></thead><tbody>';
+  var html = '<table class="coop-table"><thead><tr><th>\u516C\u53F8</th><th>\u8054\u7CFB\u4EBA</th><th>\u7B7E\u7EA6\u65F6\u95F4</th><th>\u5E74\u6846\u6570\u91CF</th><th>\u5DF2\u51FA\u8D27</th><th>\u672C\u5B63\u5EA6\u8BA1\u5212\u51FA\u8D27</th><th>\u9996\u63D0\u53F0\u6570</th><th>\u8D1F\u8D23\u4EBA</th></tr></thead><tbody>';
   signed.sort(function(a,b) { return new Date(b.createdAt) - new Date(a.createdAt); }).forEach(function(c) {
     var u = getUserName(c.assignedTo || c.createdBy);
     var qty = Number(c.annualQty) || 0;
@@ -2209,9 +2253,10 @@ function renderCooperation() {
     html += '<tr>' +
       '<td class="company-cell">' + (c.companyName || '') + '</td>' +
       '<td>' + (c.contactName || '') + '</td>' +
-      '<td>' + (c.phone || '') + (c.email ? ' \u00B7 ' + c.email : '') + '</td>' +
       '<td>' + formatDateShort(c.updatedAt || c.createdAt) + '</td>' +
       '<td><span class="coop-qty">' + qty + ' \u53F0</span> <span class="coop-rate ' + rateClass + '">' + (qty >= 100 ? '\u5927' : qty >= 30 ? '\u4E2D' : '\u5C0F') + '</span></td>' +
+      '<td>' + ((c.shippedQty || 0) > 0 ? c.shippedQty + ' \u53F0' : '\u2014') + '</td>' +
+      '<td>' + ((c.quarterlyPlanQty || 0) > 0 ? c.quarterlyPlanQty + ' \u53F0' : '\u2014') + '</td>' +
       '<td>' + ((c.firstQty || 0) > 0 ? c.firstQty + ' \u53F0' : '\u2014') + '</td>' +
       '<td>' + u + '</td>' +
     '</tr>';
@@ -2287,6 +2332,7 @@ function renderKanbanCard(c) {
         '<span class="card-budget">' + ((c.annualQty || 0) > 0 ? c.annualQty + ' \u53F0/\u5E74' : '') + '</span>' +
         '<span class="card-owner">\u{1F464} ' + u + '</span>' +
       '</div>' +
+      (c.stage === 'signed' ? '<div class="card-signed-info">\u{1F69A} \u5DF2\u51FA\u8D27 ' + (c.shippedQty || 0) + ' | \u{1F4C5} \u8BA1\u5212 ' + (c.quarterlyPlanQty || 0) + '</div>' : '') +
       (c.blocker ? '<div class="card-blocker">\u26A0\uFE0F ' + c.blocker + '</div>' : '') +
     '</div>'
   );
@@ -2418,6 +2464,10 @@ function openAddModal() {
   document.getElementById('fSocial').value = '';
   document.getElementById('fAnnualQty').value = '';
   document.getElementById('fFirstQty').value = '';
+  document.getElementById('fShippedQty').value = '';
+  document.getElementById('fQuarterlyPlanQty').value = '';
+  document.getElementById('signedFieldShipped').style.display = 'none';
+  document.getElementById('signedFieldPlan').style.display = 'none';
   document.getElementById('customerModal').classList.add('active');
 }
 
@@ -2438,6 +2488,11 @@ function openEditModal(id) {
   document.getElementById('fFirstQty').value = c.firstQty || '';
   document.getElementById('fCloseDate').value = c.estimatedCloseDate || '';
   document.getElementById('fSocial').value = c.socialLink || '';
+  document.getElementById('fShippedQty').value = c.shippedQty || '';
+  document.getElementById('fQuarterlyPlanQty').value = c.quarterlyPlanQty || '';
+  var isSigned = c.stage === 'signed';
+  document.getElementById('signedFieldShipped').style.display = isSigned ? '' : 'none';
+  document.getElementById('signedFieldPlan').style.display = isSigned ? '' : 'none';
   document.getElementById('fRequirement').value = c.productRequirement || '';
   document.getElementById('fBlocker').value = c.blocker || '';
   document.getElementById('fNotes').value = c.notes || '';
@@ -2463,6 +2518,8 @@ async function saveCustomer() {
     annualQty: parseInt(document.getElementById('fAnnualQty').value) || 0,
     firstQty: parseInt(document.getElementById('fFirstQty').value) || 0,
     estimatedCloseDate: document.getElementById('fCloseDate').value,
+    shippedQty: parseInt(document.getElementById('fShippedQty').value) || 0,
+    quarterlyPlanQty: parseInt(document.getElementById('fQuarterlyPlanQty').value) || 0,
     productRequirement: document.getElementById('fRequirement').value.trim(),
     blocker: document.getElementById('fBlocker').value.trim(),
     notes: document.getElementById('fNotes').value.trim()
@@ -2525,6 +2582,8 @@ function showDetail(id) {
     '<div class="detail-item"><div class="label">\u5BA2\u6237\u9636\u6BB5</div><div class="value"><span class="stage-badge ' + getStageBadgeClass(c.stage) + '">' + getStageIcon(c.stage) + ' ' + getStageLabel(c.stage) + '</span></div></div>' +
     '<div class="detail-item"><div class="label">\u9884\u8BA1\u5E74\u6846\u6570\u91CF</div><div class="value">' + ((c.annualQty || 0) > 0 ? c.annualQty + ' \u53F0' : '--') + '</div></div>' +
     '<div class="detail-item"><div class="label">\u9884\u8BA1\u9996\u63D0\u53F0\u6570</div><div class="value">' + ((c.firstQty || 0) > 0 ? c.firstQty + ' \u53F0' : '--') + '</div></div>' +
+    (c.stage === 'signed' ? '<div class="detail-item"><div class="label">\u5DF2\u51FA\u8D27\u6570\u91CF</div><div class="value">' + ((c.shippedQty || 0) > 0 ? c.shippedQty + ' \u53F0' : '0 \u53F0') + '</div></div>' : '') +
+    (c.stage === 'signed' ? '<div class="detail-item"><div class="label">\u672C\u5B63\u5EA6\u8BA1\u5212\u51FA\u8D27</div><div class="value">' + ((c.quarterlyPlanQty || 0) > 0 ? c.quarterlyPlanQty + ' \u53F0' : '0 \u53F0') + '</div></div>' : '') +
     '<div class="detail-item"><div class="label">\u9884\u8BA1\u6210\u4EA4</div><div class="value">' + (c.estimatedCloseDate || '--') + '</div></div>' +
     '<div class="detail-item full"><div class="label">\u4EA7\u54C1\u9700\u6C42</div><div class="value">' + (c.productRequirement || '--') + '</div></div>' +
     '<div class="detail-item full"><div class="label">\u5F53\u524D\u5361\u70B9</div><div class="value">' + (c.blocker || '\u65E0') + '</div></div>' +
@@ -2833,6 +2892,13 @@ document.addEventListener('DOMContentLoaded', async function() {
     document.getElementById('dashDateFrom').value = '';
     document.getElementById('dashDateTo').value = '';
     renderDashboard();
+  });
+
+  // 客户阶段切换 - 显示/隐藏签约字段
+  document.getElementById('fStage').addEventListener('change', function() {
+    var isSigned = this.value === 'signed';
+    document.getElementById('signedFieldShipped').style.display = isSigned ? '' : 'none';
+    document.getElementById('signedFieldPlan').style.display = isSigned ? '' : 'none';
   });
 
   document.getElementById('addCustomerBtn').addEventListener('click', openAddModal);
