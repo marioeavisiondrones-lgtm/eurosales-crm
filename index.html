@@ -457,6 +457,90 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
 .stat-icon.amber { background: var(--accent-100); color: var(--accent-500); }
 .stat-icon.emerald { background: var(--emerald-100); color: var(--emerald-500); }
 .stat-icon.red { background: var(--red-100); color: var(--red-500); }
+.stat-icon.purple { background: #e0e7ff; color: #6366f1; }
+.stat-icon.green { background: #d1fae5; color: #059669; }
+
+/* 仪表盘工具栏 */
+.dashboard-toolbar {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.date-filter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.date-filter label {
+  font-size: .82rem;
+  font-weight: 600;
+  color: var(--navy-600);
+  margin-right: 4px;
+}
+.date-input {
+  padding: 5px 10px;
+  border: 1px solid var(--navy-200);
+  border-radius: var(--radius-sm);
+  font-size: .82rem;
+  font-family: var(--font-sans);
+  color: var(--navy-700);
+  outline: none;
+  transition: border-color var(--transition);
+}
+.date-input:focus { border-color: var(--accent-500); }
+.date-sep { color: var(--navy-400); font-size: .85rem; }
+
+/* 合作看板 */
+.coop-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.coop-table-wrap {
+  overflow-x: auto;
+}
+.coop-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.coop-table th {
+  text-align: left;
+  padding: 10px 14px;
+  font-size: .78rem;
+  font-weight: 600;
+  color: var(--navy-400);
+  text-transform: uppercase;
+  letter-spacing: .03em;
+  border-bottom: 2px solid var(--navy-100);
+  white-space: nowrap;
+}
+.coop-table td {
+  padding: 10px 14px;
+  font-size: .85rem;
+  color: var(--navy-700);
+  border-bottom: 1px solid var(--navy-50);
+  white-space: nowrap;
+}
+.coop-table tr:last-child td { border-bottom: none; }
+.coop-table tr:hover td { background: var(--accent-50); }
+.coop-qty {
+  font-weight: 700;
+  font-family: var(--font-display);
+  color: var(--accent-600);
+}
+.coop-rate {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: .8rem;
+  font-weight: 600;
+}
+.coop-rate.high { background: var(--emerald-100); color: var(--emerald-500); }
+.coop-rate.mid { background: #fef3c7; color: #d97706; }
+.coop-rate.low { background: var(--red-100); color: var(--red-500); }
+
 .dashboard-bottom {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -534,10 +618,12 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
   margin-top: 6px;
   flex-shrink: 0;
 }
-.activity-dot.lead { background: var(--blue-500); }
-.activity-dot.negotiation { background: var(--accent-500); }
-.activity-dot.won { background: var(--emerald-500); }
-.activity-dot.lost { background: var(--red-500); }
+.activity-dot.first_reply { background: var(--blue-500); }
+.activity-dot.needs_analysis { background: #ec4899; }
+.activity-dot.price_negotiation { background: #d97706; }
+.activity-dot.prototype { background: #6366f1; }
+.activity-dot.contracting { background: var(--accent-500); }
+.activity-dot.signed { background: var(--emerald-500); }
 .activity-text { flex: 1; font-size: .85rem; color: var(--navy-600); line-height: 1.4; }
 .activity-text strong { color: var(--navy-800); }
 .activity-time { font-size: .75rem; color: var(--navy-400); white-space: nowrap; flex-shrink: 0; }
@@ -804,13 +890,12 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
   font-size: .8rem;
   font-weight: 600;
 }
-.stage-badge.lead { background: var(--blue-100); color: var(--blue-500); }
-.stage-badge.initial_contact { background: #e0e7ff; color: #6366f1; }
+.stage-badge.first_reply { background: var(--blue-100); color: var(--blue-500); }
 .stage-badge.needs_analysis { background: #fce7f3; color: #ec4899; }
-.stage-badge.solution_quotation { background: var(--accent-100); color: var(--accent-600); }
-.stage-badge.negotiation { background: #fef3c7; color: #d97706; }
-.stage-badge.closed_won { background: var(--emerald-100); color: var(--emerald-500); }
-.stage-badge.closed_lost { background: var(--red-100); color: var(--red-500); }
+.stage-badge.price_negotiation { background: #fef3c7; color: #d97706; }
+.stage-badge.prototype { background: #e0e7ff; color: #6366f1; }
+.stage-badge.contracting { background: var(--accent-100); color: var(--accent-600); }
+.stage-badge.signed { background: var(--emerald-100); color: var(--emerald-500); }
 
 /* 列表 */
 .list-table-wrap { overflow-x: auto; }
@@ -1209,6 +1294,10 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
         <span class="nav-icon">&#x1F4CA;</span>
         <span class="nav-text">仪表盘</span>
       </div>
+      <div class="nav-item" data-page="cooperation">
+        <span class="nav-icon">&#x1F91D;</span>
+        <span class="nav-text">合作看板</span>
+      </div>
       <div class="nav-item" data-page="kanban">
         <span class="nav-icon">&#x1F4CB;</span>
         <span class="nav-text">看板</span>
@@ -1249,6 +1338,16 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
 
       <!-- ========== 仪表盘 ========== -->
       <div class="page active" id="page-dashboard">
+        <div class="dashboard-toolbar">
+          <div class="date-filter">
+            <label>时间范围</label>
+            <input type="date" id="dashDateFrom" class="date-input">
+            <span class="date-sep">~</span>
+            <input type="date" id="dashDateTo" class="date-input">
+            <button class="btn btn-sm btn-outline" id="dashFilterBtn" style="padding:4px 14px;">筛选</button>
+            <button class="btn btn-sm btn-ghost" id="dashClearFilterBtn" style="padding:4px 10px;font-size:.8rem;">清除</button>
+          </div>
+        </div>
         <div class="dashboard-grid" id="statCards">
           <div class="stat-card">
             <div class="stat-icon blue">&#x1F4CC;</div>
@@ -1260,19 +1359,19 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
             <div class="stat-icon amber">&#x1F504;</div>
             <div class="label">进行中</div>
             <div class="value" id="statActive">0</div>
-            <div class="sub">未成交也非流失</div>
+            <div class="sub">未签约也非流失</div>
           </div>
           <div class="stat-card">
             <div class="stat-icon emerald">&#x1F4B0;</div>
-            <div class="label">预计年框</div>
-            <div class="value" id="statBudget">0 台</div>
-            <div class="sub">进行中客户预计年框总量</div>
+            <div class="label">预计订单数量</div>
+            <div class="value" id="statBudget">0 单</div>
+            <div class="sub">按计划成交时间统计</div>
           </div>
           <div class="stat-card">
             <div class="stat-icon red">&#x1F4C8;</div>
             <div class="label">转化率</div>
             <div class="value" id="statRate">0%</div>
-            <div class="sub">成交 / (成交+流失)</div>
+            <div class="sub">签约 / (签约+流失)</div>
           </div>
         </div>
         <div class="dashboard-bottom">
@@ -1286,6 +1385,44 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
             <div class="card-header"><h3>&#x23F1; 最近活动</h3></div>
             <div class="card-body" id="activityContainer">
               <div class="empty-state"><div class="empty-icon">&#x1F4ED;</div><h3>暂无活动记录</h3><p>当你新增或更新客户后，最近操作会显示在这里。</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== 合作看板 ========== -->
+      <div class="page" id="page-cooperation">
+        <div class="coop-grid">
+          <div class="stat-card">
+            <div class="stat-icon green">&#x1F3C6;</div>
+            <div class="label">已签约客户</div>
+            <div class="value" id="coopTotal">0</div>
+            <div class="sub">已签约并打款客户</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon purple">&#x1F4CA;</div>
+            <div class="label">新订单数</div>
+            <div class="value" id="coopNewOrders">0</div>
+            <div class="sub">本月新增签约客户</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon emerald">&#x1F4E6;</div>
+            <div class="label">年框达成率</div>
+            <div class="value" id="coopRate">0%</div>
+            <div class="sub">已签约客户年框均值</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon amber">&#x1F4B5;</div>
+            <div class="label">预计年框总量</div>
+            <div class="value" id="coopAnnualQty">0 台</div>
+            <div class="sub">已签约客户年框合计</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3>&#x1F4CB; 已签约客户明细</h3></div>
+          <div class="card-body">
+            <div class="coop-table-wrap" id="coopTableWrap">
+              <div class="empty-state"><div class="empty-icon">&#x1F4ED;</div><h3>暂无签约客户</h3><p>客户签约后，合作看板数据将自动更新。</p></div>
             </div>
           </div>
         </div>
@@ -1430,13 +1567,12 @@ Modal - 新增/编辑客户
           <div class="form-group">
             <label>客户阶段</label>
             <select id="fStage">
-              <option value="lead">线索</option>
-              <option value="initial_contact">初步接触</option>
+              <option value="first_reply">首次回复</option>
               <option value="needs_analysis">需求分析</option>
-              <option value="solution_quotation">方案报价</option>
-              <option value="negotiation">商务谈判</option>
-              <option value="closed_won">已成交</option>
-              <option value="closed_lost">已流失</option>
+              <option value="price_negotiation">价格磋商</option>
+              <option value="prototype">样机推进</option>
+              <option value="contracting">签约中</option>
+              <option value="signed">已签约并打款</option>
             </select>
           </div>
           <div class="form-group">
@@ -1615,15 +1751,14 @@ const ALL_COUNTRIES = [
 // 阶段定义
 // ============================================
 const STAGES = [
-  { id: 'lead', label: '线索', icon: '\u{1F4CC}' },
-  { id: 'initial_contact', label: '初步接触', icon: '\u{1F91D}' },
+  { id: 'first_reply', label: '首次回复', icon: '\u{1F4E8}' },
   { id: 'needs_analysis', label: '需求分析', icon: '\u{1F50D}' },
-  { id: 'solution_quotation', label: '方案报价', icon: '\u{1F4C4}' },
-  { id: 'negotiation', label: '商务谈判', icon: '\u{1F4AC}' },
-  { id: 'closed_won', label: '已成交', icon: '\u2705' },
-  { id: 'closed_lost', label: '已流失', icon: '\u274C' }
+  { id: 'price_negotiation', label: '价格磋商', icon: '\u{1F4B0}' },
+  { id: 'prototype', label: '样机推进', icon: '\u{1F4BF}' },
+  { id: 'contracting', label: '签约中', icon: '\u{1F4DC}' },
+  { id: 'signed', label: '已签约并打款', icon: '\u2705' }
 ];
-const ACTIVE_STAGES = ['lead','initial_contact','needs_analysis','solution_quotation','negotiation'];
+const ACTIVE_STAGES = ['first_reply','needs_analysis','price_negotiation','prototype','contracting'];
 
 // ============================================
 // API 封装 - 所有数据操作均通过 fetch 调用
@@ -1866,11 +2001,12 @@ function navigate(page) {
   if (pg) pg.classList.add('active');
   var nav = document.querySelector('.nav-item[data-page="' + page + '"]');
   if (nav) nav.classList.add('active');
-  var titles = { dashboard: '\u4EEA\u8868\u76D8', kanban: '\u770B\u677F', list: '\u5BA2\u6237\u5217\u8868', 'sales-mgmt': '\u8D26\u53F7\u7BA1\u7406', profile: '\u4E2A\u4EBA\u8D26\u53F7' };
+  var titles = { dashboard: '\u4EEA\u8868\u76D8', cooperation: '\u5408\u4F5C\u770B\u677F', kanban: '\u770B\u677F', list: '\u5BA2\u6237\u5217\u8868', 'sales-mgmt': '\u8D26\u53F7\u7BA1\u7406', profile: '\u4E2A\u4EBA\u8D26\u53F7' };
   document.getElementById('pageTitle').textContent = titles[page] || page;
   // 个人账号页面隐藏新增客户按钮
   document.getElementById('addCustomerBtn').style.display = page === 'profile' ? 'none' : '';
   if (page === 'dashboard') renderDashboard();
+  if (page === 'cooperation') renderCooperation();
   if (page === 'kanban') renderKanban();
   if (page === 'list') renderList();
   if (page === 'sales-mgmt') renderSalesMgmt();
@@ -1983,20 +2119,40 @@ function getFilteredCustomers() {
 }
 
 // ============================================
-// 仪表盘
+// 仪表盘（含日期筛选）
 // ============================================
+function getDashboardDateFilter() {
+  var from = document.getElementById('dashDateFrom').value;
+  var to = document.getElementById('dashDateTo').value;
+  return { from: from ? new Date(from) : null, to: to ? new Date(to + 'T23:59:59') : null };
+}
+
+function filterByDate(customers, from, to) {
+  if (!from && !to) return customers;
+  return customers.filter(function(c) {
+    var t = new Date(c.createdAt).getTime();
+    if (from && t < from.getTime()) return false;
+    if (to && t > to.getTime()) return false;
+    return true;
+  });
+}
+
 function renderDashboard() {
-  const customers = getVisibleCustomers();
+  var df = getDashboardDateFilter();
+  var customers = filterByDate(getVisibleCustomers(), df.from, df.to);
   const total = customers.length;
   const active = customers.filter(function(c) { return ACTIVE_STAGES.includes(c.stage); }).length;
-  const totalAnnualQty = customers.filter(function(c) { return ACTIVE_STAGES.includes(c.stage); }).reduce(function(s, c) { return s + (Number(c.annualQty) || 0); }, 0);
-  const won = customers.filter(function(c) { return c.stage === 'closed_won'; }).length;
-  const lost = customers.filter(function(c) { return c.stage === 'closed_lost'; }).length;
-  const rate = (won + lost) > 0 ? Math.round(won / (won + lost) * 100) : 0;
+  // 预计订单数量：按计划成交时间（estimatedCloseDate）在未来的进行中客户
+  var orderQty = customers.filter(function(c) {
+    return ACTIVE_STAGES.includes(c.stage) && c.estimatedCloseDate;
+  }).reduce(function(s, c) { return s + (Number(c.annualQty) || 0); }, 0);
+  const signed = customers.filter(function(c) { return c.stage === 'signed'; }).length;
+  const lost = 0; // 新阶段无流失
+  const rate = signed > 0 ? 100 : 0;
 
   document.getElementById('statTotal').textContent = total;
   document.getElementById('statActive').textContent = active;
-  document.getElementById('statBudget').textContent = totalAnnualQty + ' \u53F0';
+  document.getElementById('statBudget').textContent = orderQty + ' \u5355';
   document.getElementById('statRate').textContent = rate + '%';
   renderFunnel(customers);
   renderActivities();
@@ -2009,7 +2165,7 @@ function renderFunnel(customers) {
   STAGES.forEach(function(s) {
     const count = customers.filter(function(c) { return c.stage === s.id; }).length;
     const pct = maxCount > 0 ? (count / maxCount * 100) : 0;
-    const barClass = s.id === 'closed_won' ? 'won' : s.id === 'closed_lost' ? 'lost' : 'active';
+    const barClass = s.id === 'signed' ? 'won' : 'active';
     html +=
       '<div class="funnel-bar">' +
         '<span class="stage-label">' + s.icon + ' ' + s.label + '</span>' +
@@ -2018,6 +2174,50 @@ function renderFunnel(customers) {
       '</div>';
   });
   container.innerHTML = html || '<div class="empty-state"><div class="empty-icon">\u{1F4ED}</div><h3>\u6682\u65E0\u6570\u636E</h3><p>\u5F55\u5165\u5BA2\u6237\u540E\uFF0C\u6F0F\u6597\u56FE\u5C06\u81EA\u52A8\u751F\u6210\u3002</p></div>';
+}
+
+// ============================================
+// 合作看板
+// ============================================
+function renderCooperation() {
+  const signed = getVisibleCustomers().filter(function(c) { return c.stage === 'signed'; });
+  const total = signed.length;
+  // 本月新签约
+  var now = new Date();
+  var monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  var newOrders = signed.filter(function(c) { return new Date(c.createdAt) >= monthStart; }).length;
+  // 年框总量
+  var annualTotal = signed.reduce(function(s, c) { return s + (Number(c.annualQty) || 0); }, 0);
+  var avgRate = total > 0 ? Math.round(annualTotal / total) : 0;
+
+  document.getElementById('coopTotal').textContent = total;
+  document.getElementById('coopNewOrders').textContent = newOrders;
+  document.getElementById('coopRate').textContent = avgRate > 0 ? avgRate + ' \u53F0/\u5E74' : '0%';
+  document.getElementById('coopAnnualQty').textContent = annualTotal + ' \u53F0';
+
+  // 签约客户明细表格
+  var wrap = document.getElementById('coopTableWrap');
+  if (!signed.length) {
+    wrap.innerHTML = '<div class="empty-state"><div class="empty-icon">\u{1F4ED}</div><h3>\u6682\u65E0\u7B7E\u7EA6\u5BA2\u6237</h3><p>\u5BA2\u6237\u7B7E\u7EA6\u540E\uFF0C\u5408\u4F5C\u770B\u677F\u6570\u636E\u5C06\u81EA\u52A8\u66F4\u65B0\u3002</p></div>';
+    return;
+  }
+  var html = '<table class="coop-table"><thead><tr><th>\u516C\u53F8</th><th>\u8054\u7CFB\u4EBA</th><th>\u8054\u7CFB\u65B9\u5F0F</th><th>\u7B7E\u7EA6\u65F6\u95F4</th><th>\u5E74\u6846\u6570\u91CF</th><th>\u9996\u63D0\u53F0\u6570</th><th>\u8D1F\u8D23\u4EBA</th></tr></thead><tbody>';
+  signed.sort(function(a,b) { return new Date(b.createdAt) - new Date(a.createdAt); }).forEach(function(c) {
+    var u = getUserName(c.assignedTo || c.createdBy);
+    var qty = Number(c.annualQty) || 0;
+    var rateClass = qty >= 100 ? 'high' : qty >= 30 ? 'mid' : 'low';
+    html += '<tr>' +
+      '<td class="company-cell">' + (c.companyName || '') + '</td>' +
+      '<td>' + (c.contactName || '') + '</td>' +
+      '<td>' + (c.phone || '') + (c.email ? ' \u00B7 ' + c.email : '') + '</td>' +
+      '<td>' + formatDateShort(c.updatedAt || c.createdAt) + '</td>' +
+      '<td><span class="coop-qty">' + qty + ' \u53F0</span> <span class="coop-rate ' + rateClass + '">' + (qty >= 100 ? '\u5927' : qty >= 30 ? '\u4E2D' : '\u5C0F') + '</span></td>' +
+      '<td>' + ((c.firstQty || 0) > 0 ? c.firstQty + ' \u53F0' : '\u2014') + '</td>' +
+      '<td>' + u + '</td>' +
+    '</tr>';
+  });
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
 }
 
 function renderActivities() {
@@ -2029,7 +2229,7 @@ function renderActivities() {
   }
   var html = '<ul class="activity-list">';
   acts.forEach(function(a) {
-    var dotClass = a.stage || 'lead';
+    var dotClass = a.stage || 'first_reply';
     html += '<li class="activity-item"><span class="activity-dot ' + dotClass + '"></span><span class="activity-text">' + (a.text || '') + '</span><span class="activity-time">' + formatDate(a.time) + '</span></li>';
   });
   html += '</ul>';
@@ -2038,7 +2238,7 @@ function renderActivities() {
 
 async function addActivity(text, stage) {
   try {
-    await api('POST', '/api/activities', { text: text, stage: stage || 'lead' });
+    await api('POST', '/api/activities', { text: text, stage: stage || 'first_reply' });
     AppState.activities = await api('GET', '/api/activities');
   } catch (e) {
     console.error('添加活动失败:', e);
@@ -2211,7 +2411,7 @@ function openAddModal() {
   document.getElementById('modalTitle').textContent = '\u65B0\u589E\u5BA2\u6237';
   document.getElementById('editId').value = '';
   document.getElementById('customerForm').reset();
-  document.getElementById('fStage').value = 'lead';
+  document.getElementById('fStage').value = 'first_reply';
   document.getElementById('fCountry').value = '';
   document.getElementById('fCountrySearch').value = '';
   selectedCountry = '';
@@ -2233,7 +2433,7 @@ function openEditModal(id) {
   document.getElementById('fCountry').value = c.country || '';
   document.getElementById('fCountrySearch').value = c.country || '';
   selectedCountry = c.country || '';
-  document.getElementById('fStage').value = c.stage || 'lead';
+  document.getElementById('fStage').value = c.stage || 'first_reply';
   document.getElementById('fAnnualQty').value = c.annualQty || '';
   document.getElementById('fFirstQty').value = c.firstQty || '';
   document.getElementById('fCloseDate').value = c.estimatedCloseDate || '';
@@ -2485,6 +2685,7 @@ function refreshAll() {
   if (activePage) {
     const page = activePage.id.replace('page-', '');
     if (page === 'dashboard') renderDashboard();
+    else if (page === 'cooperation') renderCooperation();
     else if (page === 'kanban') renderKanban();
     else if (page === 'list') renderList();
     else if (page === 'sales-mgmt') renderSalesMgmt();
@@ -2622,6 +2823,16 @@ document.addEventListener('DOMContentLoaded', async function() {
 
   document.querySelectorAll('.nav-item').forEach(function(item) {
     item.addEventListener('click', function() { navigate(item.dataset.page); });
+  });
+
+  // 仪表盘日期筛选
+  document.getElementById('dashFilterBtn').addEventListener('click', function() {
+    renderDashboard();
+  });
+  document.getElementById('dashClearFilterBtn').addEventListener('click', function() {
+    document.getElementById('dashDateFrom').value = '';
+    document.getElementById('dashDateTo').value = '';
+    renderDashboard();
   });
 
   document.getElementById('addCustomerBtn').addEventListener('click', openAddModal);
