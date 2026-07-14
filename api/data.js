@@ -38,15 +38,24 @@ function writeJSON(filePath, data) {
   fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf-8');
 }
 
-// 初始化默认用户
+// 初始化默认用户（带账号密码）
 function getDefaultUsers() {
   return [
-    { id: 1, name: '负责人', role: 'manager', avatar: '负' },
-    { id: 2, name: '销售A', role: 'sales', avatar: 'A' },
-    { id: 3, name: '销售B', role: 'sales', avatar: 'B' },
-    { id: 4, name: '销售C', role: 'sales', avatar: 'C' },
-    { id: 5, name: '销售D', role: 'sales', avatar: 'D' }
+    { id: 1, name: '负责人', role: 'manager', avatar: '负', username: 'manager', password: 'admin123' },
+    { id: 2, name: '销售A', role: 'sales', avatar: 'A', username: 'sales1', password: 'sales123' },
+    { id: 3, name: '销售B', role: 'sales', avatar: 'B', username: 'sales2', password: 'sales123' },
+    { id: 4, name: '销售C', role: 'sales', avatar: 'C', username: 'sales3', password: 'sales123' },
+    { id: 5, name: '销售D', role: 'sales', avatar: 'D', username: 'sales4', password: 'sales123' }
   ];
+}
+
+// 返回用户列表时隐藏密码
+function getUsersSafe() {
+  const users = getUsers();
+  return users.map(u => {
+    const { password, ...safe } = u;
+    return safe;
+  });
 }
 
 // ============================================
@@ -188,27 +197,61 @@ async function handler(req, res) {
         break;
       }
 
+      // ========== 登录 ==========
+      case 'login': {
+        if (req.method === 'POST') {
+          const body = await parseBody(req);
+          if (!body.username || !body.password) {
+            return sendJSON(res, { error: '请输入账号和密码' }, 400);
+          }
+          const users = getUsers();
+          const user = users.find(u => u.username === body.username && u.password === body.password);
+          if (!user) {
+            return sendJSON(res, { error: '账号或密码错误' }, 401);
+          }
+          const { password, ...safeUser } = user;
+          return sendJSON(res, { success: true, user: safeUser });
+        }
+        break;
+      }
+
       // ========== 用户管理 ==========
       case 'users': {
         let users = getUsers();
         if (req.method === 'GET') {
-          return sendJSON(res, users);
+          return sendJSON(res, getUsersSafe());
         }
         if (req.method === 'POST') {
           const body = await parseBody(req);
           if (body.action === 'add') {
             if (!body.name) return sendJSON(res, { error: '姓名不能为空' }, 400);
+            if (!body.username) return sendJSON(res, { error: '账号不能为空' }, 400);
+            if (!body.password) return sendJSON(res, { error: '密码不能为空' }, 400);
+            // 检查账号是否重复
+            if (users.find(u => u.username === body.username)) {
+              return sendJSON(res, { error: '账号已存在，请使用其他账号名' }, 400);
+            }
             const maxId = Math.max(...users.filter(u => u.role === 'sales').map(u => u.id), 99);
-            const newUser = { id: maxId + 1, name: body.name, role: 'sales', avatar: body.name.charAt(0).toUpperCase() };
+            const newUser = {
+              id: maxId + 1,
+              name: body.name,
+              role: 'sales',
+              avatar: body.name.charAt(0).toUpperCase(),
+              username: body.username,
+              password: body.password
+            };
             users.push(newUser);
             saveUsers(users);
-            return sendJSON(res, { success: true, user: newUser });
+            const { password, ...safeUser } = newUser;
+            return sendJSON(res, { success: true, user: safeUser });
           }
           if (body.action === 'update') {
             const u = users.find(u => u.id === body.id);
             if (u) {
               u.name = body.name;
               u.avatar = body.name.charAt(0).toUpperCase();
+              if (body.password) u.password = body.password;
+              if (body.username) u.username = body.username;
               saveUsers(users);
               return sendJSON(res, { success: true });
             }
