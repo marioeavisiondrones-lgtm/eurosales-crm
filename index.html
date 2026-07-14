@@ -21,11 +21,11 @@
   --navy-200: #cbd5e1;
   --navy-100: #e2e8f0;
   --navy-50: #f1f5f9;
-  --amber-600: #d97706;
-  --amber-500: #f59e0b;
-  --amber-400: #fbbf24;
-  --amber-100: #fef3c7;
-  --amber-50: #fffbeb;
+  --accent-600: #2563eb;
+  --accent-500: #3b82f6;
+  --accent-400: #60a5fa;
+  --accent-100: #dbeafe;
+  --accent-50: #eff6ff;
   --emerald-500: #10b981;
   --emerald-100: #d1fae5;
   --red-500: #ef4444;
@@ -76,8 +76,8 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse at 20% 50%, rgba(217,119,6,.08) 0%, transparent 50%),
-              radial-gradient(ellipse at 80% 20%, rgba(59,130,246,.06) 0%, transparent 50%);
+  background: radial-gradient(ellipse at 20% 50%, rgba(59,130,246,.12) 0%, transparent 50%),
+              radial-gradient(ellipse at 80% 20%, rgba(37,99,235,.06) 0%, transparent 50%);
   pointer-events: none;
 }
 .login-left {
@@ -95,13 +95,11 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
   margin-bottom: 48px;
 }
 .login-left .brand-icon {
-  width: 44px; height: 44px;
-  background: linear-gradient(135deg, var(--amber-500), var(--amber-600));
-  border-radius: var(--radius);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 22px; color: var(--white); font-weight: 800;
-  box-shadow: 0 8px 24px rgba(217,119,6,.3);
+  width: auto; height: auto;
+  background: none;
+  box-shadow: none;
 }
+.login-left .brand-text span { color: var(--accent-400); }
 .login-left .brand-text {
   font-family: var(--font-display);
   font-weight: 700;
@@ -109,7 +107,6 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
   color: var(--white);
   letter-spacing: -.01em;
 }
-.login-left .brand-text span { color: var(--amber-400); }
 .login-left h1 {
   font-family: var(--font-display);
   font-size: 2.5rem;
@@ -183,9 +180,9 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
   transition: all var(--transition);
 }
 .login-form .form-group input:focus {
-  border-color: var(--amber-500);
+  border-color: var(--accent-500);
   background: rgba(255,255,255,.1);
-  box-shadow: 0 0 0 3px rgba(217,119,6,.15);
+  box-shadow: 0 0 0 3px rgba(59,130,246,.15);
 }
 .login-form .form-group input::placeholder {
   color: var(--navy-500);
@@ -199,7 +196,7 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
 .login-btn {
   width: 100%;
   padding: 14px;
-  background: linear-gradient(135deg, var(--amber-500), var(--amber-600));
+  background: linear-gradient(135deg, var(--accent-500), var(--accent-600));
   border: none;
   border-radius: var(--radius-sm);
   color: var(--white);
@@ -207,10 +204,21 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
   font-weight: 600;
   font-family: var(--font-display);
   transition: all var(--transition);
-  box-shadow: 0 4px 14px rgba(217,119,6,.25);
+  box-shadow: 0 4px 14px rgba(59,130,246,.25);
 }
-.login-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(217,119,6,.35); }
+.login-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(59,130,246,.35); }
 .login-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+.login-forgot {
+  text-align: center;
+  margin-top: 12px;
+}
+.login-forgot a {
+  color: var(--navy-400);
+  font-size: .82rem;
+  text-decoration: none;
+  transition: color var(--transition);
+}
+.login-forgot a:hover { color: var(--accent-400); }
 
 /* ============================================
    主应用布局
@@ -228,19 +236,20 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
   z-index: 10;
 }
 .sidebar-brand {
-  padding: 18px 20px;
+  padding: 14px 16px;
   display: flex;
   align-items: center;
-  gap: 10px;
   border-bottom: 1px solid rgba(255,255,255,.06);
   height: var(--header-h);
 }
 .sidebar-brand .brand-icon {
-  width: 34px; height: 34px;
-  background: linear-gradient(135deg, var(--amber-500), var(--amber-600));
-  border-radius: 8px;
+  width: auto; height: auto;
+  background: none;
+  box-shadow: none;
+  border-radius: 0;
   display: flex; align-items: center; justify-content: center;
   font-size: 17px; color: var(--white); font-weight: 800;
+  flex-shrink: 0;
 }
 .sidebar-brand .brand-text {
   font-family: var(--font-display);
@@ -248,7 +257,7 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
   font-size: 1.05rem;
   letter-spacing: -.01em;
 }
-.sidebar-brand .brand-text span { color: var(--amber-400); }
+.sidebar-brand .brand-text span { color: var(--accent-400); }
 .sidebar-nav {
   flex: 1;
   padding: 12px 10px;
@@ -272,7 +281,7 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
   text-align: left;
 }
 .nav-item:hover { background: rgba(255,255,255,.06); color: var(--navy-100); }
-.nav-item.active { background: rgba(217,119,6,.12); color: var(--amber-400); }
+.nav-item.active { background: rgba(59,130,246,.12); color: var(--accent-400); }
 .nav-item .nav-icon {
   width: 20px; height: 20px;
   display: flex; align-items: center; justify-content: center;
@@ -288,7 +297,7 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
   font-weight: 600;
   color: var(--navy-200);
 }
-.nav-item.active .badge { background: rgba(217,119,6,.2); color: var(--amber-300); }
+.nav-item.active .badge { background: rgba(59,130,246,.2); color: var(--accent-400); }
 .sidebar-footer {
   padding: 12px 10px;
   border-top: 1px solid rgba(255,255,255,.06);
@@ -307,7 +316,7 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
 .user-mini .avatar {
   width: 32px; height: 32px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--amber-500), var(--amber-600));
+  background: linear-gradient(135deg, var(--accent-500), var(--accent-600));
   display: flex; align-items: center; justify-content: center;
   font-size: 13px; font-weight: 700; color: var(--white);
   flex-shrink: 0;
@@ -375,11 +384,11 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
 }
 .btn-primary:hover { background: var(--navy-700); }
 .btn-amber {
-  background: linear-gradient(135deg, var(--amber-500), var(--amber-600));
+  background: linear-gradient(135deg, var(--accent-500), var(--accent-600));
   color: var(--white);
-  box-shadow: 0 4px 12px rgba(217,119,6,.2);
+  box-shadow: 0 4px 12px rgba(59,130,246,.2);
 }
-.btn-amber:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(217,119,6,.3); }
+.btn-amber:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(59,130,246,.3); }
 .btn-ghost {
   background: transparent;
   color: var(--navy-500);
@@ -445,7 +454,7 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
   font-size: 18px;
 }
 .stat-icon.blue { background: var(--blue-100); color: var(--blue-500); }
-.stat-icon.amber { background: var(--amber-100); color: var(--amber-500); }
+.stat-icon.amber { background: var(--accent-100); color: var(--accent-500); }
 .stat-icon.emerald { background: var(--emerald-100); color: var(--emerald-500); }
 .stat-icon.red { background: var(--red-100); color: var(--red-500); }
 .dashboard-bottom {
@@ -508,7 +517,7 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
   border-radius: 4px;
   transition: width .6s cubic-bezier(.4,0,.2,1);
 }
-.funnel-bar .bar-fill.active { background: linear-gradient(90deg, var(--amber-500), var(--amber-400)); }
+.funnel-bar .bar-fill.active { background: linear-gradient(90deg, var(--accent-500), var(--accent-400)); }
 .funnel-bar .bar-fill.won { background: linear-gradient(90deg, var(--emerald-500), #34d399); }
 .funnel-bar .bar-fill.lost { background: var(--navy-300); }
 .activity-list { list-style: none; }
@@ -526,7 +535,7 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
   flex-shrink: 0;
 }
 .activity-dot.lead { background: var(--blue-500); }
-.activity-dot.negotiation { background: var(--amber-500); }
+.activity-dot.negotiation { background: var(--accent-500); }
 .activity-dot.won { background: var(--emerald-500); }
 .activity-dot.lost { background: var(--red-500); }
 .activity-text { flex: 1; font-size: .85rem; color: var(--navy-600); line-height: 1.4; }
@@ -556,7 +565,7 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
   background: var(--white);
   outline: none;
 }
-.filter-select:focus { border-color: var(--amber-500); }
+.filter-select:focus { border-color: var(--accent-500); }
 .kanban-board {
   display: flex;
   gap: 14px;
@@ -606,7 +615,7 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
   overflow-y: auto;
   min-height: 100px;
 }
-.kanban-col-body.drag-over { background: rgba(217,119,6,.06); border-radius: 6px; }
+.kanban-col-body.drag-over { background: rgba(59,130,246,.06); border-radius: 6px; }
 .kanban-card {
   background: var(--white);
   border-radius: var(--radius-sm);
@@ -763,8 +772,8 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
 .form-group input:focus,
 .form-group select:focus,
 .form-group textarea:focus {
-  border-color: var(--amber-500);
-  box-shadow: 0 0 0 3px rgba(217,119,6,.1);
+  border-color: var(--accent-500);
+  box-shadow: 0 0 0 3px rgba(59,130,246,.1);
 }
 .form-group textarea { resize: vertical; min-height: 72px; }
 
@@ -798,7 +807,7 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
 .stage-badge.lead { background: var(--blue-100); color: var(--blue-500); }
 .stage-badge.initial_contact { background: #e0e7ff; color: #6366f1; }
 .stage-badge.needs_analysis { background: #fce7f3; color: #ec4899; }
-.stage-badge.solution_quotation { background: var(--amber-100); color: var(--amber-600); }
+.stage-badge.solution_quotation { background: var(--accent-100); color: var(--accent-600); }
 .stage-badge.negotiation { background: #fef3c7; color: #d97706; }
 .stage-badge.closed_won { background: var(--emerald-100); color: var(--emerald-500); }
 .stage-badge.closed_lost { background: var(--red-100); color: var(--red-500); }
@@ -853,7 +862,7 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
   font-size: 20px; font-weight: 700; color: var(--white);
   flex-shrink: 0;
 }
-.sales-card .s-avatar.manager { background: linear-gradient(135deg, var(--amber-500), var(--amber-600)); }
+.sales-card .s-avatar.manager { background: linear-gradient(135deg, var(--accent-500), var(--accent-600)); }
 .sales-card .s-avatar.sales { background: linear-gradient(135deg, var(--blue-500), #6366f1); }
 .sales-card .s-info { flex: 1; min-width: 0; }
 .sales-card .s-info .s-name { font-weight: 600; font-size: .95rem; color: var(--navy-800); }
@@ -925,7 +934,7 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
   width: 64px;
   height: 64px;
   border-radius: 16px;
-  background: linear-gradient(135deg, var(--amber-400), var(--amber-500));
+  background: linear-gradient(135deg, var(--accent-400), var(--accent-500));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1028,15 +1037,15 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
 <div class="login-page" id="loginPage">
   <div class="login-left">
     <div class="brand">
-      <div class="brand-icon">
-        <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-          <circle cx="16" cy="16" r="15" stroke="#D97706" stroke-width="2"/>
-          <path d="M10 20C10 20 13 10 16 10C19 10 22 20 22 20" stroke="#D97706" stroke-width="2" stroke-linecap="round"/>
-          <path d="M8 16C8 16 12 8 16 8C20 8 24 16 24 16" stroke="#D97706" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="3 3"/>
-          <circle cx="16" cy="10" r="1.5" fill="#D97706"/>
+      <div class="brand-icon" style="background:none;box-shadow:none;width:auto;height:auto;">
+        <svg width="180" height="52" viewBox="0 0 180 52" fill="none">
+          <path d="M22 44C36.5 44 46 34 46 20C46 8 36.5 2 22 2C8 2 2 8 2 20" stroke="#2E3A59" stroke-width="3.5" stroke-linecap="round"/>
+          <path d="M2 20C2 20 10 16 22 16C34 16 46 20 46 32" stroke="#2E3A59" stroke-width="2.5" stroke-linecap="round"/>
+          <circle cx="22" cy="13" r="4.5" fill="#2E3A59"/>
+          <line x1="48" y1="20" x2="48" y2="22" stroke="#2E3A59" stroke-width="2"/>
+          <text x="56" y="34" font-family="'Plus Jakarta Sans',Arial,sans-serif" font-weight="800" font-size="26" fill="#2E3A59" letter-spacing="3">EAVISION</text>
         </svg>
       </div>
-      <div class="brand-text">Eavision</div>
     </div>
     <h1>亚太一区<br>客户管理平台</h1>
     <p>统一管理亚太一区团队意向客户，实时追踪销售进度，洞察转化瓶颈，让每一笔生意都尽在掌握。</p>
@@ -1056,7 +1065,28 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
         </div>
         <div class="login-error" id="loginError"></div>
         <button class="login-btn" id="loginBtn">登 录</button>
+        <div class="login-forgot">
+          <a href="#" id="forgotPwdLink">忘记密码?</a>
+        </div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 重置密码 Modal ========== -->
+<div class="modal-overlay" id="resetPwdModal">
+  <div class="modal" style="max-width:400px;">
+    <div class="modal-header">
+      <h3>重置管理员密码</h3>
+      <button class="modal-close" id="resetPwdCloseBtn">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p style="color:var(--navy-400);margin-bottom:16px;font-size:.85rem;line-height:1.5;">确认将管理员账号 <strong>admin</strong> 的密码重置为默认密码？重置后首次登录需再次修改密码。</p>
+      <div class="login-error" id="resetPwdError"></div>
+    </div>
+    <div class="modal-footer" style="display:flex;gap:8px;justify-content:flex-end;">
+      <button class="btn btn-ghost" id="resetPwdCancelBtn">取消</button>
+      <button class="btn btn-primary" id="resetPwdConfirmBtn">确认重置</button>
     </div>
   </div>
 </div>
@@ -1067,14 +1097,14 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
 <div class="app-layout" id="appLayout">
   <aside class="sidebar">
     <div class="sidebar-brand">
-      <div class="brand-icon">
-        <svg width="22" height="22" viewBox="0 0 32 32" fill="none">
-          <circle cx="16" cy="16" r="15" stroke="#D97706" stroke-width="2"/>
-          <path d="M10 20C10 20 13 10 16 10C19 10 22 20 22 20" stroke="#D97706" stroke-width="2" stroke-linecap="round"/>
-          <circle cx="16" cy="10" r="1.5" fill="#D97706"/>
+      <div class="brand-icon" style="background:none;box-shadow:none;width:auto;height:auto;">
+        <svg width="120" height="34" viewBox="0 0 180 52" fill="none">
+          <path d="M22 44C36.5 44 46 34 46 20C46 8 36.5 2 22 2C8 2 2 8 2 20" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round"/>
+          <path d="M2 20C2 20 10 16 22 16C34 16 46 20 46 32" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round"/>
+          <circle cx="22" cy="13" r="4.5" fill="#ffffff"/>
+          <text x="56" y="34" font-family="'Plus Jakarta Sans',Arial,sans-serif" font-weight="800" font-size="26" fill="#ffffff" letter-spacing="3">EAVISION</text>
         </svg>
       </div>
-      <div class="brand-text">Eavision</div>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-item active" data-page="dashboard">
@@ -1599,6 +1629,29 @@ function enterApp() {
 }
 
 // ============================================
+// 重置密码
+// ============================================
+function showResetPwdModal() {
+  document.getElementById('resetPwdError').textContent = '';
+  document.getElementById('resetPwdModal').classList.add('active');
+}
+
+async function confirmResetPwd() {
+  const errorEl = document.getElementById('resetPwdError');
+  errorEl.textContent = '';
+  try {
+    const result = await api('POST', '/api/reset-admin', {});
+    if (result.success) {
+      document.getElementById('resetPwdModal').classList.remove('active');
+      document.getElementById('loginError').textContent = '';
+      toast('密码已重置为: admin123，请使用新密码登录', 'success');
+    }
+  } catch (e) {
+    errorEl.textContent = e.message || '重置失败，请重试';
+  }
+}
+
+// ============================================
 // 修改密码
 // ============================================
 function showChangePwdModal() {
@@ -2103,7 +2156,7 @@ function renderSalesMgmt() {
       '<div class="sales-card">' +
         '<div class="s-avatar ' + (isManager ? 'manager' : 'sales') + '">' + (u.avatar || u.name[0]) + '</div>' +
         '<div class="s-info">' +
-          '<div class="s-name">' + u.name + (isCurrentUser ? ' <span style="color:var(--amber-400);font-size:.75rem;">(我)</span>' : '') + '</div>' +
+          '<div class="s-name">' + u.name + (isCurrentUser ? ' <span style="color:var(--accent-400);font-size:.75rem;">(我)</span>' : '') + '</div>' +
           '<div class="s-role-tag">' + (isManager ? '\u{1F511} \u7BA1\u7406\u5458' : '\u{1F464} \u9500\u552E') + '</div>' +
           '<div class="s-stats">' + customerCount + ' \u4E2A\u5BA2\u6237</div>' +
           (u.username ? '<div class="s-stats" style="font-size:.72rem;color:var(--navy-500);">\u8D26\u53F7: ' + u.username + '</div>' : '') +
@@ -2285,6 +2338,20 @@ document.addEventListener('DOMContentLoaded', async function() {
       login();
     }
   });
+
+  // 忘记密码 - 重置管理员账号
+  document.getElementById('forgotPwdLink').addEventListener('click', function(e) {
+    e.preventDefault();
+    showResetPwdModal();
+  });
+  document.getElementById('resetPwdConfirmBtn').addEventListener('click', confirmResetPwd);
+  document.getElementById('resetPwdCancelBtn').addEventListener('click', function() {
+    document.getElementById('resetPwdModal').classList.remove('active');
+  });
+  document.getElementById('resetPwdCloseBtn').addEventListener('click', function() {
+    document.getElementById('resetPwdModal').classList.remove('active');
+  });
+
   document.getElementById('logoutBtn').addEventListener('click', logout);
 
   // 点击用户区域进入个人账号管理
