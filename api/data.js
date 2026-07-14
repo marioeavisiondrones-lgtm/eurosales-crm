@@ -171,7 +171,7 @@ function getDefaultUsers() {
   return [{
     id: 1, name: '主管理员', role: 'manager', avatar: '主',
     username: 'admin', password: 'admin123', email: 'admin@eavision.com',
-    mustChangePassword: true, createdAt: new Date().toISOString()
+    mustChangePassword: false, createdAt: new Date().toISOString()
   }];
 }
 

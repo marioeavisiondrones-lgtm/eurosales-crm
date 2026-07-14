@@ -1264,9 +1264,9 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
           </div>
           <div class="stat-card">
             <div class="stat-icon emerald">&#x1F4B0;</div>
-            <div class="label">预计金额</div>
-            <div class="value" id="statBudget">&euro;0</div>
-            <div class="sub">进行中客户预算总和</div>
+            <div class="label">预计年框</div>
+            <div class="value" id="statBudget">0 台</div>
+            <div class="sub">进行中客户预计年框总量</div>
           </div>
           <div class="stat-card">
             <div class="stat-icon red">&#x1F4C8;</div>
@@ -1416,6 +1416,10 @@ Modal - 新增/编辑客户
             <input type="email" id="fEmail" required placeholder="contact@company.de">
           </div>
           <div class="form-group">
+            <label>公司网站或社媒链接 *</label>
+            <input type="url" id="fSocial" required placeholder="https://www.linkedin.com/company/...">
+          </div>
+          <div class="form-group">
             <label>所在国家</label>
             <div class="country-selector" id="countrySelector">
               <input type="text" class="country-search-input" id="fCountrySearch" placeholder="搜索国家..." autocomplete="off">
@@ -1436,8 +1440,12 @@ Modal - 新增/编辑客户
             </select>
           </div>
           <div class="form-group">
-            <label>预计金额 (&euro;)</label>
-            <input type="number" id="fBudget" min="0" step="1000" placeholder="50000">
+            <label>预计年框数量</label>
+            <input type="number" id="fAnnualQty" min="0" step="1" placeholder="e.g. 100">
+          </div>
+          <div class="form-group">
+            <label>预计首提台数</label>
+            <input type="number" id="fFirstQty" min="0" step="1" placeholder="e.g. 10">
           </div>
           <div class="form-group">
             <label>预计成交时间</label>
@@ -1981,14 +1989,14 @@ function renderDashboard() {
   const customers = getVisibleCustomers();
   const total = customers.length;
   const active = customers.filter(function(c) { return ACTIVE_STAGES.includes(c.stage); }).length;
-  const totalBudget = customers.filter(function(c) { return ACTIVE_STAGES.includes(c.stage); }).reduce(function(s, c) { return s + (Number(c.budget) || 0); }, 0);
+  const totalAnnualQty = customers.filter(function(c) { return ACTIVE_STAGES.includes(c.stage); }).reduce(function(s, c) { return s + (Number(c.annualQty) || 0); }, 0);
   const won = customers.filter(function(c) { return c.stage === 'closed_won'; }).length;
   const lost = customers.filter(function(c) { return c.stage === 'closed_lost'; }).length;
   const rate = (won + lost) > 0 ? Math.round(won / (won + lost) * 100) : 0;
 
   document.getElementById('statTotal').textContent = total;
   document.getElementById('statActive').textContent = active;
-  document.getElementById('statBudget').textContent = formatCurrency(totalBudget);
+  document.getElementById('statBudget').textContent = totalAnnualQty + ' \u53F0';
   document.getElementById('statRate').textContent = rate + '%';
   renderFunnel(customers);
   renderActivities();
@@ -2076,7 +2084,7 @@ function renderKanbanCard(c) {
       '<div class="card-company">' + (c.companyName || '') + '</div>' +
       '<div class="card-contact">' + (c.contactName || '') + (c.phone ? ' \u00B7 ' + c.phone : '') + '</div>' +
       '<div class="card-meta">' +
-        '<span class="card-budget">' + formatCurrency(c.budget) + '</span>' +
+        '<span class="card-budget">' + ((c.annualQty || 0) > 0 ? c.annualQty + ' \u53F0/\u5E74' : '') + '</span>' +
         '<span class="card-owner">\u{1F464} ' + u + '</span>' +
       '</div>' +
       (c.blocker ? '<div class="card-blocker">\u26A0\uFE0F ' + c.blocker + '</div>' : '') +
@@ -2164,13 +2172,13 @@ function renderList() {
     wrap.innerHTML = '<div class="empty-state"><div class="empty-icon">\u{1F4CB}</div><h3>\u6682\u65E0\u5BA2\u6237\u6570\u636E</h3><p>\u70B9\u51FB\u53F3\u4E0A\u89D2\u201C\u65B0\u589E\u5BA2\u6237\u201D\u5F00\u59CB\u5F55\u5165\u3002</p></div>';
     return;
   }
-  var html = '<table class="list-table"><thead><tr><th>\u516C\u53F8</th><th>\u8054\u7CFB\u4EBA</th><th>\u9636\u6BB5</th><th>\u9884\u7B97</th><th>\u5361\u70B9</th><th>\u8D1F\u8D23\u4EBA</th><th>\u5F55\u5165\u65F6\u95F4</th><th>\u64CD\u4F5C</th></tr></thead><tbody>';
+  var html = '<table class="list-table"><thead><tr><th>\u516C\u53F8</th><th>\u8054\u7CFB\u4EBA</th><th>\u9636\u6BB5</th><th>\u5E74\u6846</th><th>\u5361\u70B9</th><th>\u8D1F\u8D23\u4EBA</th><th>\u5F55\u5165\u65F6\u95F4</th><th>\u64CD\u4F5C</th></tr></thead><tbody>';
   customers.sort(function(a,b) { return new Date(b.createdAt) - new Date(a.createdAt); }).forEach(function(c) {
     html += '<tr data-id="' + c.id + '">' +
       '<td class="company-cell">' + (c.companyName || '') + '</td>' +
       '<td>' + (c.contactName || '') + '</td>' +
       '<td><span class="stage-badge ' + getStageBadgeClass(c.stage) + '">' + getStageIcon(c.stage) + ' ' + getStageLabel(c.stage) + '</span></td>' +
-      '<td>' + formatCurrency(c.budget) + '</td>' +
+      '<td>' + ((c.annualQty || 0) > 0 ? c.annualQty + ' \u53F0' : '\u2014') + '</td>' +
       '<td>' + (c.blocker ? '\u26A0\uFE0F \u6709\u5361\u70B9' : '\u2014') + '</td>' +
       '<td>' + getUserName(c.assignedTo || c.createdBy) + '</td>' +
       '<td>' + formatDateShort(c.createdAt) + '</td>' +
@@ -2207,6 +2215,9 @@ function openAddModal() {
   document.getElementById('fCountry').value = '';
   document.getElementById('fCountrySearch').value = '';
   selectedCountry = '';
+  document.getElementById('fSocial').value = '';
+  document.getElementById('fAnnualQty').value = '';
+  document.getElementById('fFirstQty').value = '';
   document.getElementById('customerModal').classList.add('active');
 }
 
@@ -2223,8 +2234,10 @@ function openEditModal(id) {
   document.getElementById('fCountrySearch').value = c.country || '';
   selectedCountry = c.country || '';
   document.getElementById('fStage').value = c.stage || 'lead';
-  document.getElementById('fBudget').value = c.budget || '';
+  document.getElementById('fAnnualQty').value = c.annualQty || '';
+  document.getElementById('fFirstQty').value = c.firstQty || '';
   document.getElementById('fCloseDate').value = c.estimatedCloseDate || '';
+  document.getElementById('fSocial').value = c.socialLink || '';
   document.getElementById('fRequirement').value = c.productRequirement || '';
   document.getElementById('fBlocker').value = c.blocker || '';
   document.getElementById('fNotes').value = c.notes || '';
@@ -2244,16 +2257,18 @@ async function saveCustomer() {
     contactName: document.getElementById('fContact').value.trim(),
     phone: document.getElementById('fPhone').value.trim(),
     email: document.getElementById('fEmail').value.trim(),
+    socialLink: document.getElementById('fSocial').value.trim(),
     country: document.getElementById('fCountry').value,
     stage: document.getElementById('fStage').value,
-    budget: parseFloat(document.getElementById('fBudget').value) || 0,
+    annualQty: parseInt(document.getElementById('fAnnualQty').value) || 0,
+    firstQty: parseInt(document.getElementById('fFirstQty').value) || 0,
     estimatedCloseDate: document.getElementById('fCloseDate').value,
     productRequirement: document.getElementById('fRequirement').value.trim(),
     blocker: document.getElementById('fBlocker').value.trim(),
     notes: document.getElementById('fNotes').value.trim()
   };
-  if (!data.companyName || !data.contactName || !data.phone || !data.email) {
-    toast('\u8BF7\u586B\u5199\u6240\u6709\u5FC5\u586B\u9879\uFF08\u516C\u53F8\u540D\u79F0\u3001\u8054\u7CFB\u4EBA\u3001\u7535\u8BDD\u3001\u90AE\u7BB1\uFF09', 'error');
+  if (!data.companyName || !data.contactName || !data.phone || !data.email || !data.socialLink) {
+    toast('\u8BF7\u586B\u5199\u6240\u6709\u5FC5\u586B\u9879\uFF08\u516C\u53F8\u540D\u79F0\u3001\u8054\u7CFB\u4EBA\u3001\u7535\u8BDD\u3001\u90AE\u7BB1\u3001\u516C\u53F8\u7F51\u7AD9\u6216\u793E\u5A92\u94FE\u63A5\uFF09', 'error');
     return;
   }
   const u = AppState.currentUser;
@@ -2305,9 +2320,11 @@ function showDetail(id) {
   grid.innerHTML =
     '<div class="detail-item"><div class="label">\u8054\u7CFB\u4EBA</div><div class="value">' + (c.contactName || '--') + '</div></div>' +
     '<div class="detail-item"><div class="label">\u8054\u7CFB\u65B9\u5F0F</div><div class="value">' + (c.phone || '--') + (c.email ? ' \u00B7 ' + c.email : '') + '</div></div>' +
+    '<div class="detail-item"><div class="label">\u7F51\u7AD9/\u793E\u5A92</div><div class="value">' + (c.socialLink ? '<a href="' + c.socialLink + '" target="_blank" rel="noopener" style="color:var(--accent-500)">\u67E5\u770B\u94FE\u63A5</a>' : '--') + '</div></div>' +
     '<div class="detail-item"><div class="label">\u56FD\u5BB6</div><div class="value">' + (c.country || '--') + '</div></div>' +
     '<div class="detail-item"><div class="label">\u5BA2\u6237\u9636\u6BB5</div><div class="value"><span class="stage-badge ' + getStageBadgeClass(c.stage) + '">' + getStageIcon(c.stage) + ' ' + getStageLabel(c.stage) + '</span></div></div>' +
-    '<div class="detail-item"><div class="label">\u9884\u8BA1\u91D1\u989D</div><div class="value">' + formatCurrency(c.budget) + '</div></div>' +
+    '<div class="detail-item"><div class="label">\u9884\u8BA1\u5E74\u6846\u6570\u91CF</div><div class="value">' + ((c.annualQty || 0) > 0 ? c.annualQty + ' \u53F0' : '--') + '</div></div>' +
+    '<div class="detail-item"><div class="label">\u9884\u8BA1\u9996\u63D0\u53F0\u6570</div><div class="value">' + ((c.firstQty || 0) > 0 ? c.firstQty + ' \u53F0' : '--') + '</div></div>' +
     '<div class="detail-item"><div class="label">\u9884\u8BA1\u6210\u4EA4</div><div class="value">' + (c.estimatedCloseDate || '--') + '</div></div>' +
     '<div class="detail-item full"><div class="label">\u4EA7\u54C1\u9700\u6C42</div><div class="value">' + (c.productRequirement || '--') + '</div></div>' +
     '<div class="detail-item full"><div class="label">\u5F53\u524D\u5361\u70B9</div><div class="value">' + (c.blocker || '\u65E0') + '</div></div>' +
