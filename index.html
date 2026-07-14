@@ -300,7 +300,10 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
   padding: 8px 14px;
   border-radius: var(--radius-sm);
   background: rgba(255,255,255,.04);
+  cursor: pointer;
+  transition: background var(--transition);
 }
+.user-mini:hover { background: rgba(255,255,255,.08); }
 .user-mini .avatar {
   width: 32px; height: 32px;
   border-radius: 50%;
@@ -900,6 +903,83 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
 .empty-state h3 { font-size: 1.1rem; color: var(--navy-500); margin-bottom: 8px; }
 .empty-state p { font-size: .9rem; max-width: 360px; margin: 0 auto; }
 
+/* 个人账号管理 */
+.profile-card {
+  max-width: 500px;
+  margin: 0 auto;
+  background: var(--white);
+  border-radius: var(--radius);
+  border: 1px solid var(--navy-100);
+  box-shadow: var(--card-shadow);
+  overflow: hidden;
+}
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 32px;
+  background: linear-gradient(135deg, var(--navy-700), var(--navy-800));
+  color: var(--white);
+}
+.profile-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, var(--amber-400), var(--amber-500));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--white);
+  flex-shrink: 0;
+}
+.profile-info h3 {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--white);
+  margin: 0 0 4px 0;
+}
+.profile-meta {
+  display: flex;
+  gap: 12px;
+  font-size: .82rem;
+  color: var(--navy-300);
+}
+.profile-role {
+  background: rgba(255,255,255,.15);
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-weight: 600;
+}
+.profile-body {
+  padding: 28px 32px;
+}
+.profile-body h4 {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--navy-800);
+  margin: 0 0 4px 0;
+}
+.profile-hint {
+  font-size: .82rem;
+  color: var(--navy-400);
+  margin: 0 0 20px 0;
+}
+.profile-body .form-grid {
+  display: grid;
+  gap: 14px;
+}
+.profile-body .form-group label {
+  font-size: .82rem;
+  font-weight: 600;
+  color: var(--navy-600);
+  margin-bottom: 4px;
+  display: block;
+}
+
 /* 响应式 */
 @media (max-width: 1200px) {
   .dashboard-grid { grid-template-columns: repeat(2, 1fr); }
@@ -1123,6 +1203,48 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
           <button class="btn btn-amber" id="addSalesBtn">+ 添加账号</button>
         </div>
         <div class="sales-mgmt-grid" id="salesMgmtGrid"></div>
+      </div>
+
+      <!-- ========== 个人账号管理 ========== -->
+      <div class="page" id="page-profile">
+        <div class="profile-card">
+          <div class="profile-header">
+            <div class="profile-avatar" id="profileAvatar">?</div>
+            <div class="profile-info">
+              <h3 id="profileName">--</h3>
+              <div class="profile-meta">
+                <span class="profile-role" id="profileRole">--</span>
+                <span class="profile-username" id="profileUsername">@--</span>
+              </div>
+            </div>
+          </div>
+          <div class="profile-body">
+            <h4>修改密码</h4>
+            <p class="profile-hint">定期修改密码可以提高账号安全性</p>
+            <form id="profilePwdForm">
+              <div class="form-grid">
+                <div class="form-group full">
+                  <label>当前密码</label>
+                  <input type="password" id="profileOldPwd" required placeholder="输入当前密码">
+                </div>
+                <div class="form-group full">
+                  <label>新密码 *</label>
+                  <input type="password" id="profileNewPwd" required placeholder="至少4位，请设置复杂密码" autocomplete="new-password">
+                </div>
+                <div class="form-group full">
+                  <label>确认新密码 *</label>
+                  <input type="password" id="profileNewPwdConfirm" required placeholder="再次输入新密码" autocomplete="new-password">
+                </div>
+                <div class="form-group full">
+                  <div class="login-error" id="profilePwdError"></div>
+                </div>
+                <div class="form-group full">
+                  <button type="submit" class="btn btn-primary" id="profilePwdSaveBtn" style="width:100%;">保存新密码</button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
       </div>
 
     </div>
@@ -1546,12 +1668,60 @@ function navigate(page) {
   if (pg) pg.classList.add('active');
   var nav = document.querySelector('.nav-item[data-page="' + page + '"]');
   if (nav) nav.classList.add('active');
-  var titles = { dashboard: '\u4EEA\u8868\u76D8', kanban: '\u770B\u677F', list: '\u5BA2\u6237\u5217\u8868', 'sales-mgmt': '\u9500\u552E\u7BA1\u7406' };
+  var titles = { dashboard: '\u4EEA\u8868\u76D8', kanban: '\u770B\u677F', list: '\u5BA2\u6237\u5217\u8868', 'sales-mgmt': '\u8D26\u53F7\u7BA1\u7406', profile: '\u4E2A\u4EBA\u8D26\u53F7' };
   document.getElementById('pageTitle').textContent = titles[page] || page;
+  // 个人账号页面隐藏新增客户按钮
+  document.getElementById('addCustomerBtn').style.display = page === 'profile' ? 'none' : '';
   if (page === 'dashboard') renderDashboard();
   if (page === 'kanban') renderKanban();
   if (page === 'list') renderList();
   if (page === 'sales-mgmt') renderSalesMgmt();
+  if (page === 'profile') renderProfile();
+}
+
+// ============================================
+// 个人账号管理
+// ============================================
+function renderProfile() {
+  const u = AppState.currentUser;
+  if (!u) return;
+  document.getElementById('profileAvatar').textContent = u.avatar || u.name[0];
+  document.getElementById('profileName').textContent = u.name;
+  document.getElementById('profileRole').textContent = u.role === 'manager' ? '\u8D1F\u8D23\u4EBA' : '\u9500\u552E';
+  document.getElementById('profileUsername').textContent = '@' + u.username;
+  document.getElementById('profileOldPwd').value = '';
+  document.getElementById('profileNewPwd').value = '';
+  document.getElementById('profileNewPwdConfirm').value = '';
+  document.getElementById('profilePwdError').textContent = '';
+}
+
+async function saveProfilePwd() {
+  const oldPwd = document.getElementById('profileOldPwd').value.trim();
+  const newPwd = document.getElementById('profileNewPwd').value.trim();
+  const confirmPwd = document.getElementById('profileNewPwdConfirm').value.trim();
+  const errorEl = document.getElementById('profilePwdError');
+
+  if (!oldPwd) { errorEl.textContent = '\u8BF7\u8F93\u5165\u5F53\u524D\u5BC6\u7801'; return; }
+  if (!newPwd || newPwd.length < 4) { errorEl.textContent = '\u65B0\u5BC6\u7801\u81F3\u5C114\u4F4D'; return; }
+  if (newPwd !== confirmPwd) { errorEl.textContent = '\u4E24\u6B21\u8F93\u5165\u7684\u65B0\u5BC6\u7801\u4E0D\u4E00\u81F4'; return; }
+
+  try {
+    const result = await api('POST', '/api/change-password', {
+      id: AppState.currentUser.id,
+      oldPassword: oldPwd,
+      newPassword: newPwd
+    });
+    if (result.success) {
+      AppState.currentUser = result.user;
+      document.getElementById('profileOldPwd').value = '';
+      document.getElementById('profileNewPwd').value = '';
+      document.getElementById('profileNewPwdConfirm').value = '';
+      errorEl.textContent = '';
+      toast('\u5BC6\u7801\u5DF2\u6210\u529F\u4FEE\u6539', 'success');
+    }
+  } catch (e) {
+    errorEl.textContent = e.message || '\u539F\u5BC6\u7801\u9519\u8BEF';
+  }
 }
 
 // ============================================
@@ -2117,6 +2287,13 @@ document.addEventListener('DOMContentLoaded', async function() {
   });
   document.getElementById('logoutBtn').addEventListener('click', logout);
 
+  // 点击用户区域进入个人账号管理
+  document.querySelector('.user-mini').addEventListener('click', function(e) {
+    if (!e.target.closest('.logout-btn')) {
+      navigate('profile');
+    }
+  });
+
   document.querySelectorAll('.nav-item').forEach(function(item) {
     item.addEventListener('click', function() { navigate(item.dataset.page); });
   });
@@ -2142,6 +2319,18 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (e.key === 'Enter') {
       e.preventDefault();
       saveChangePwd();
+    }
+  });
+
+  // 个人账号 - 修改密码
+  document.getElementById('profilePwdSaveBtn').addEventListener('click', function(e) {
+    e.preventDefault();
+    saveProfilePwd();
+  });
+  document.getElementById('profilePwdForm').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      saveProfilePwd();
     }
   });
 
