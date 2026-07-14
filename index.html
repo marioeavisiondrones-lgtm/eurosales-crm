@@ -1000,7 +1000,7 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
       </div>
       <div class="nav-item" data-page="sales-mgmt" id="navSalesMgmt" style="display:none;">
         <span class="nav-icon">&#x1F465;</span>
-        <span class="nav-text">销售管理</span>
+        <span class="nav-text">账号管理</span>
         <span class="badge" id="salesMgmtBadge">0</span>
       </div>
     </nav>
@@ -1103,11 +1103,11 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
         </div>
       </div>
 
-      <!-- ========== 销售管理 ========== -->
+      <!-- ========== 账号管理 ========== -->
       <div class="page" id="page-sales-mgmt">
         <div class="kanban-toolbar" style="margin-bottom:16px;">
-          <span style="font-size:.82rem;color:var(--navy-400);">管理团队销售账号，共 <strong id="salesMgmtCount">0</strong> 人</span>
-          <button class="btn btn-amber" id="addSalesBtn">+ 添加销售</button>
+          <span style="font-size:.82rem;color:var(--navy-400);">管理团队账号，共 <strong id="salesMgmtCount">0</strong> 人</span>
+          <button class="btn btn-amber" id="addSalesBtn">+ 添加账号</button>
         </div>
         <div class="sales-mgmt-grid" id="salesMgmtGrid"></div>
       </div>
@@ -1213,12 +1213,12 @@ Modal - 客户详情
 </div>
 
 <!-- ============================================
-Modal - 销售管理 (新增/编辑)
+Modal - 账号管理 (新增/编辑)
 ============================================ -->
 <div class="modal-overlay" id="salesModal">
   <div class="modal" style="max-width:420px;">
     <div class="modal-header">
-      <h3 id="salesModalTitle">添加销售账号</h3>
+      <h3 id="salesModalTitle">添加账号</h3>
       <button class="modal-close" id="salesModalCloseBtn">&times;</button>
     </div>
     <div class="modal-body">
@@ -1226,17 +1226,24 @@ Modal - 销售管理 (新增/编辑)
         <input type="hidden" id="salesEditId" value="">
         <div class="form-grid">
           <div class="form-group full">
-            <label>销售姓名 *</label>
+            <label>姓名 *</label>
             <input type="text" id="fSalesName" required placeholder="e.g. 张三 / John Smith">
           </div>
           <div class="form-group full">
+            <label>角色 *</label>
+            <select id="fSalesRole">
+              <option value="sales">销售</option>
+              <option value="manager">管理员</option>
+            </select>
+          </div>
+          <div class="form-group full">
             <label>登录账号 *</label>
-            <input type="text" id="fSalesUsername" required placeholder="e.g. sales_zhang" autocomplete="off">
+            <input type="text" id="fSalesUsername" required placeholder="e.g. zhang_san" autocomplete="off">
           </div>
           <div class="form-group full">
             <label>登录密码 *</label>
-            <input type="text" id="fSalesPassword" required placeholder="e.g. 设置一个密码，至少6位" autocomplete="off">
-            <small style="color:var(--navy-400);font-size:.75rem;">销售用此账号密码登录系统</small>
+            <input type="text" id="fSalesPassword" required placeholder="e.g. 设置初始密码，至少4位" autocomplete="off">
+            <small style="color:var(--navy-400);font-size:.75rem;">首次登录需修改密码，请提醒用户</small>
           </div>
         </div>
       </form>
@@ -1244,6 +1251,42 @@ Modal - 销售管理 (新增/编辑)
     <div class="modal-footer">
       <button class="btn btn-ghost" id="salesModalCancelBtn">取消</button>
       <button class="btn btn-primary" id="salesModalSaveBtn">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================
+Modal - 首次登录修改密码
+============================================ -->
+<div class="modal-overlay" id="changePwdModal">
+  <div class="modal" style="max-width:400px;">
+    <div class="modal-header">
+      <h3>首次登录 · 修改密码</h3>
+    </div>
+    <div class="modal-body">
+      <p style="color:var(--navy-400);margin-bottom:16px;font-size:.85rem;">系统检测到这是你首次登录或密码为初始密码，请设置新密码。</p>
+      <form id="changePwdForm">
+        <div class="form-grid">
+          <div class="form-group full">
+            <label>原密码</label>
+            <input type="password" id="fOldPwd" required placeholder="输入当前密码">
+          </div>
+          <div class="form-group full">
+            <label>新密码 *</label>
+            <input type="password" id="fNewPwd" required placeholder="至少4位，请设置复杂密码" autocomplete="new-password">
+          </div>
+          <div class="form-group full">
+            <label>确认新密码 *</label>
+            <input type="password" id="fNewPwdConfirm" required placeholder="再次输入新密码" autocomplete="new-password">
+          </div>
+          <div class="form-group full">
+            <div class="login-error" id="changePwdError"></div>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" id="changePwdSaveBtn" style="width:100%;">确认修改并登录</button>
     </div>
   </div>
 </div>
@@ -1400,15 +1443,67 @@ async function login() {
     if (result.success && result.user) {
       AppState.currentUser = result.user;
       errorEl.textContent = '';
-      document.getElementById('loginPage').style.display = 'none';
-      document.getElementById('appLayout').classList.add('active');
-      renderUserInfo();
-      await initApp();
+      document.getElementById('loginUsername').value = '';
+      document.getElementById('loginPassword').value = '';
+      // 检查是否首次登录需修改密码
+      if (result.user.mustChangePassword) {
+        showChangePwdModal();
+      } else {
+        enterApp();
+      }
     } else {
       errorEl.textContent = '登录失败，请重试';
     }
   } catch (e) {
     errorEl.textContent = e.message || '账号或密码错误';
+  }
+}
+
+function enterApp() {
+  document.getElementById('loginPage').style.display = 'none';
+  document.getElementById('appLayout').classList.add('active');
+  renderUserInfo();
+  initApp();
+}
+
+// ============================================
+// 修改密码
+// ============================================
+function showChangePwdModal() {
+  document.getElementById('fOldPwd').value = '';
+  document.getElementById('fOldPwd').placeholder = '输入当前密码（初始密码）';
+  document.getElementById('fNewPwd').value = '';
+  document.getElementById('fNewPwdConfirm').value = '';
+  document.getElementById('changePwdError').textContent = '';
+  document.getElementById('changePwdModal').classList.add('active');
+}
+
+async function saveChangePwd() {
+  const oldPwd = document.getElementById('fOldPwd').value.trim();
+  const newPwd = document.getElementById('fNewPwd').value.trim();
+  const confirmPwd = document.getElementById('fNewPwdConfirm').value.trim();
+  const errorEl = document.getElementById('changePwdError');
+
+  if (!oldPwd) { errorEl.textContent = '请输入原密码'; return; }
+  if (!newPwd || newPwd.length < 4) { errorEl.textContent = '新密码至少4位'; return; }
+  if (newPwd !== confirmPwd) { errorEl.textContent = '两次输入的新密码不一致'; return; }
+
+  try {
+    const result = await api('POST', '/api/change-password', {
+      id: AppState.currentUser.id,
+      oldPassword: oldPwd,
+      newPassword: newPwd
+    });
+    if (result.success) {
+      AppState.currentUser = result.user;
+      document.getElementById('changePwdModal').classList.remove('active');
+      toast('密码修改成功，请使用新密码登录');
+      enterApp();
+    } else {
+      errorEl.textContent = '修改失败，请重试';
+    }
+  } catch (e) {
+    errorEl.textContent = e.message || '原密码错误';
   }
 }
 
@@ -1823,19 +1918,19 @@ function renderSalesMgmt() {
   users.forEach(function(u) {
     const customerCount = AppState.customers.filter(function(c) { return c.assignedTo === u.id || c.createdBy === u.id; }).length;
     const isManager = u.role === 'manager';
+    const isCurrentUser = u.id === AppState.currentUser.id;
     html +=
       '<div class="sales-card">' +
         '<div class="s-avatar ' + (isManager ? 'manager' : 'sales') + '">' + (u.avatar || u.name[0]) + '</div>' +
         '<div class="s-info">' +
-          '<div class="s-name">' + u.name + '</div>' +
-          '<div class="s-role-tag">' + (isManager ? '\u{1F511} \u8D1F\u8D23\u4EBA\uFF08\u4E3B\u8D26\u53F7\uFF09' : '\u{1F464} \u9500\u552E') + '</div>' +
+          '<div class="s-name">' + u.name + (isCurrentUser ? ' <span style="color:var(--amber-400);font-size:.75rem;">(我)</span>' : '') + '</div>' +
+          '<div class="s-role-tag">' + (isManager ? '\u{1F511} \u7BA1\u7406\u5458' : '\u{1F464} \u9500\u552E') + '</div>' +
           '<div class="s-stats">' + customerCount + ' \u4E2A\u5BA2\u6237</div>' +
+          (u.username ? '<div class="s-stats" style="font-size:.72rem;color:var(--navy-500);">\u8D26\u53F7: ' + u.username + '</div>' : '') +
         '</div>' +
         '<div class="s-actions">' +
-          (!isManager ?
-            '<button class="btn btn-ghost btn-sm edit-sales-btn" data-id="' + u.id + '" title="\u91CD\u547D\u540D">\u270F\uFE0F</button>' +
-            '<button class="btn btn-ghost btn-sm delete-sales-btn" data-id="' + u.id + '" title="\u5220\u9664" style="color:var(--red-500)">\u2715</button>'
-          : '') +
+          '<button class="btn btn-ghost btn-sm edit-sales-btn" data-id="' + u.id + '" title="\u7F16\u8F91">\u270F\uFE0F</button>' +
+          '<button class="btn btn-ghost btn-sm delete-sales-btn" data-id="' + u.id + '" title="\u5220\u9664" style="color:var(--red-500)">\u2715</button>' +
         '</div>' +
       '</div>';
   });
@@ -1846,10 +1941,12 @@ function renderSalesMgmt() {
   });
   grid.querySelectorAll('.delete-sales-btn').forEach(function(btn) {
     btn.addEventListener('click', async function() {
-      if (confirm('\u786E\u5B9A\u8981\u5220\u9664\u8BE5\u9500\u552E\u8D26\u53F7\u5417\uFF1F\u8BE5\u9500\u552E\u7684\u5BA2\u6237\u5C06\u81EA\u52A8\u8F6C\u79FB\u7ED9\u8D1F\u8D23\u4EBA\u3002')) {
+      var target = AppState.users.find(function(u) { return u.id === parseInt(btn.dataset.id); });
+      var roleName = target && target.role === 'manager' ? '\u7BA1\u7406\u5458' : '\u9500\u552E';
+      if (confirm('\u786E\u5B9A\u8981\u5220\u9664\u8BE5' + roleName + '\u8D26\u53F7\u5417\uFF1F\u8BE5\u8D26\u53F7\u7684\u5BA2\u6237\u5C06\u81EA\u52A8\u8F6C\u79FB\u7ED9\u5176\u4ED6\u7BA1\u7406\u5458\u3002')) {
         try {
           await api('POST', '/api/users', { action: 'delete', id: parseInt(btn.dataset.id) });
-          toast('\u9500\u552E\u8D26\u53F7\u5DF2\u5220\u9664');
+          toast('\u8D26\u53F7\u5DF2\u5220\u9664');
           // 重新加载数据
           AppState.users = await api('GET', '/api/users');
           AppState.customers = await api('GET', '/api/customers');
@@ -1865,26 +1962,30 @@ function renderSalesMgmt() {
 }
 
 function openAddSalesModal() {
-  document.getElementById('salesModalTitle').textContent = '\u6DFB\u52A0\u9500\u552E\u8D26\u53F7';
+  document.getElementById('salesModalTitle').textContent = '\u6DFB\u52A0\u8D26\u53F7';
   document.getElementById('salesEditId').value = '';
   document.getElementById('fSalesName').value = '';
+  document.getElementById('fSalesRole').value = 'sales';
   document.getElementById('fSalesUsername').value = '';
   document.getElementById('fSalesPassword').value = '';
+  document.getElementById('fSalesRole').disabled = false;
   document.getElementById('fSalesUsername').disabled = false;
   document.getElementById('fSalesPassword').required = true;
-  document.getElementById('fSalesPassword').placeholder = 'e.g. 设置一个密码，至少6位';
+  document.getElementById('fSalesPassword').placeholder = 'e.g. 设置初始密码，至少4位';
   document.getElementById('salesModal').classList.add('active');
 }
 
 function openEditSalesModal(id) {
   const u = AppState.users.find(function(s) { return s.id === id; });
   if (!u) return;
-  document.getElementById('salesModalTitle').textContent = '\u7F16\u8F91\u9500\u552E\u8D26\u53F7';
+  document.getElementById('salesModalTitle').textContent = '\u7F16\u8F91\u8D26\u53F7';
   document.getElementById('salesEditId').value = id;
   document.getElementById('fSalesName').value = u.name;
+  document.getElementById('fSalesRole').value = u.role || 'sales';
+  document.getElementById('fSalesRole').disabled = true;
   document.getElementById('fSalesUsername').value = u.username || '';
-  document.getElementById('fSalesPassword').value = '';
   document.getElementById('fSalesUsername').disabled = true;
+  document.getElementById('fSalesPassword').value = '';
   document.getElementById('fSalesPassword').required = false;
   document.getElementById('fSalesPassword').placeholder = '\u4E0D\u586B\u5219\u4FDD\u6301\u539F\u5BC6\u7801';
   document.getElementById('salesModal').classList.add('active');
@@ -1893,25 +1994,27 @@ function openEditSalesModal(id) {
 async function saveSalesAccount() {
   const id = document.getElementById('salesEditId').value;
   const name = document.getElementById('fSalesName').value.trim();
+  const role = document.getElementById('fSalesRole').value;
   const username = document.getElementById('fSalesUsername').value.trim();
   const password = document.getElementById('fSalesPassword').value.trim();
   if (!name) {
-    toast('\u8BF7\u8F93\u5165\u9500\u552E\u59D3\u540D', 'error');
+    toast('\u8BF7\u8F93\u5165\u59D3\u540D', 'error');
     return;
   }
   try {
     if (id) {
-      // 编辑模式：只传密码（如果有）
+      // 编辑模式
       const payload = { action: 'update', id: parseInt(id), name: name };
       if (password) payload.password = password;
       await api('POST', '/api/users', payload);
-      toast('\u9500\u552E\u8D26\u53F7\u5DF2\u66F4\u65B0');
+      toast('\u8D26\u53F7\u5DF2\u66F4\u65B0');
     } else {
-      // 新增模式：需要账号密码
+      // 新增模式
       if (!username) { toast('\u8BF7\u8F93\u5165\u767B\u5F55\u8D26\u53F7', 'error'); return; }
       if (!password || password.length < 4) { toast('\u8BF7\u8F93\u5165\u5BC6\u7801\uFF08\u81F3\u5C114\u4F4D\uFF09', 'error'); return; }
-      await api('POST', '/api/users', { action: 'add', name: name, username: username, password: password });
-      toast('\u9500\u552E\u8D26\u53F7\u5DF2\u6DFB\u52A0\uFF0C\u8D26\u53F7: ' + username);
+      await api('POST', '/api/users', { action: 'add', name: name, role: role, username: username, password: password });
+      var roleLabel = role === 'manager' ? '\u7BA1\u7406\u5458' : '\u9500\u552E';
+      toast('\u5DF2\u6DFB\u52A0' + roleLabel + '\u8D26\u53F7\uFF0C\u8D26\u53F7: ' + username);
     }
     AppState.users = await api('GET', '/api/users');
     closeModal();
@@ -1960,7 +2063,7 @@ function refreshAll() {
 // 初始化
 // ============================================
 async function initApp() {
-  // 显示销售管理导航（仅负责人可见）
+  // 显示账号管理导航（所有管理员可见）
   if (AppState.currentUser.role === 'manager') {
     document.getElementById('navSalesMgmt').style.display = 'flex';
   }
@@ -2028,6 +2131,15 @@ document.addEventListener('DOMContentLoaded', async function() {
   document.getElementById('salesModalCloseBtn').addEventListener('click', closeModal);
   document.getElementById('salesModalCancelBtn').addEventListener('click', closeModal);
   document.getElementById('salesModalSaveBtn').addEventListener('click', saveSalesAccount);
+
+  // 修改密码 Modal
+  document.getElementById('changePwdSaveBtn').addEventListener('click', saveChangePwd);
+  document.getElementById('changePwdForm').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      saveChangePwd();
+    }
+  });
 
   // 点击遮罩关闭
   document.querySelectorAll('.modal-overlay').forEach(function(m) {

@@ -38,14 +38,10 @@ function writeJSON(filePath, data) {
   fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf-8');
 }
 
-// 初始化默认用户（带账号密码）
+// 初始化默认用户（带账号密码，首次登录需改密码）
 function getDefaultUsers() {
   return [
-    { id: 1, name: '负责人', role: 'manager', avatar: '负', username: 'manager', password: 'admin123' },
-    { id: 2, name: '销售A', role: 'sales', avatar: 'A', username: 'sales1', password: 'sales123' },
-    { id: 3, name: '销售B', role: 'sales', avatar: 'B', username: 'sales2', password: 'sales123' },
-    { id: 4, name: '销售C', role: 'sales', avatar: 'C', username: 'sales3', password: 'sales123' },
-    { id: 5, name: '销售D', role: 'sales', avatar: 'D', username: 'sales4', password: 'sales123' }
+    { id: 1, name: '主管理员', role: 'manager', avatar: '主', username: 'admin', password: 'admin123', mustChangePassword: true }
   ];
 }
 
@@ -215,6 +211,31 @@ async function handler(req, res) {
         break;
       }
 
+      // ========== 修改密码 ==========
+      case 'change-password': {
+        if (req.method === 'POST') {
+          const body = await parseBody(req);
+          if (!body.id || !body.newPassword) {
+            return sendJSON(res, { error: '参数不完整' }, 400);
+          }
+          if (body.newPassword.length < 4) {
+            return sendJSON(res, { error: '密码至少4位' }, 400);
+          }
+          const users = getUsers();
+          const u = users.find(u => u.id === body.id);
+          if (!u) return sendJSON(res, { error: '用户不存在' }, 404);
+          if (body.oldPassword && u.password !== body.oldPassword) {
+            return sendJSON(res, { error: '原密码错误' }, 400);
+          }
+          u.password = body.newPassword;
+          u.mustChangePassword = false;
+          saveUsers(users);
+          const { password, ...safeUser } = u;
+          return sendJSON(res, { success: true, user: safeUser });
+        }
+        break;
+      }
+
       // ========== 用户管理 ==========
       case 'users': {
         let users = getUsers();
@@ -231,14 +252,16 @@ async function handler(req, res) {
             if (users.find(u => u.username === body.username)) {
               return sendJSON(res, { error: '账号已存在，请使用其他账号名' }, 400);
             }
-            const maxId = Math.max(...users.filter(u => u.role === 'sales').map(u => u.id), 99);
+            const role = body.role === 'manager' ? 'manager' : 'sales';
+            const maxId = Math.max(...users.map(u => u.id), 99);
             const newUser = {
               id: maxId + 1,
               name: body.name,
-              role: 'sales',
+              role: role,
               avatar: body.name.charAt(0).toUpperCase(),
               username: body.username,
-              password: body.password
+              password: body.password,
+              mustChangePassword: true
             };
             users.push(newUser);
             saveUsers(users);
@@ -252,26 +275,36 @@ async function handler(req, res) {
               u.avatar = body.name.charAt(0).toUpperCase();
               if (body.password) u.password = body.password;
               if (body.username) u.username = body.username;
+              if (body.role) u.role = body.role === 'manager' ? 'manager' : 'sales';
               saveUsers(users);
               return sendJSON(res, { success: true });
             }
             return sendJSON(res, { error: '用户不存在' }, 404);
           }
           if (body.action === 'delete') {
-            if (body.id === 1) return sendJSON(res, { error: '不能删除负责人' }, 400);
+            const targetUser = users.find(u => u.id === body.id);
+            if (!targetUser) return sendJSON(res, { error: '用户不存在' }, 404);
+            // 至少保留一个管理员
+            const managerCount = users.filter(u => u.role === 'manager').length;
+            if (targetUser.role === 'manager' && managerCount <= 1) {
+              return sendJSON(res, { error: '至少保留一个管理员账号' }, 400);
+            }
             users = users.filter(u => u.id !== body.id);
             saveUsers(users);
-            // 将该销售的客户转给负责人
-            const customers = getCustomers();
-            let changed = false;
-            customers.forEach(c => {
-              if (c.assignedTo === body.id || c.createdBy === body.id) {
-                c.assignedTo = 1;
-                c.createdBy = 1;
-                changed = true;
-              }
-            });
-            if (changed) saveCustomers(customers);
+            // 删除用户后，其客户转给第一个管理员
+            const firstManager = users.find(u => u.role === 'manager');
+            if (firstManager) {
+              const customers = getCustomers();
+              let changed = false;
+              customers.forEach(c => {
+                if (c.assignedTo === body.id || c.createdBy === body.id) {
+                  c.assignedTo = firstManager.id;
+                  c.createdBy = firstManager.id;
+                  changed = true;
+                }
+              });
+              if (changed) saveCustomers(customers);
+            }
             return sendJSON(res, { success: true });
           }
         }
