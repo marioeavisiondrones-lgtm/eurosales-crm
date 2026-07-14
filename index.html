@@ -1021,6 +1021,69 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
   cursor: not-allowed;
 }
 
+/* 搜索式国家选择器 */
+.country-selector {
+  position: relative;
+  width: 100%;
+}
+.country-search-input {
+  width: 100%;
+  padding: 8px 12px 8px 36px;
+  border: 1px solid var(--navy-200);
+  border-radius: var(--radius-sm);
+  font-size: .85rem;
+  font-family: var(--font-sans);
+  background: var(--white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E") 10px center no-repeat;
+  background-size: 16px;
+  box-sizing: border-box;
+  outline: none;
+  transition: border-color var(--transition);
+}
+.country-search-input:focus {
+  border-color: var(--accent-500);
+  box-shadow: 0 0 0 3px rgba(59,130,246,.1);
+}
+.country-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  max-height: 220px;
+  overflow-y: auto;
+  background: var(--white);
+  border: 1px solid var(--navy-200);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 8px 24px rgba(0,0,0,.1);
+  z-index: 100;
+  display: none;
+  margin-top: 2px;
+}
+.country-dropdown.active { display: block; }
+.country-option {
+  padding: 7px 12px;
+  font-size: .85rem;
+  color: var(--navy-700);
+  cursor: pointer;
+  transition: background .15s;
+}
+.country-option:hover { background: var(--accent-50); }
+.country-option.selected {
+  background: var(--accent-50);
+  color: var(--accent-600);
+  font-weight: 600;
+}
+.country-option.selected::after {
+  content: ' ✓';
+  float: right;
+  color: var(--accent-500);
+}
+.country-empty {
+  color: var(--navy-400);
+  cursor: default;
+  text-align: center;
+  padding: 12px;
+}
+
 /* 响应式 */
 @media (max-width: 1200px) {
   .dashboard-grid { grid-template-columns: repeat(2, 1fr); }
@@ -1354,9 +1417,11 @@ Modal - 新增/编辑客户
           </div>
           <div class="form-group">
             <label>所在国家</label>
-            <select id="fCountry">
-              <option value="">-- 选择 --</option>
-            </select>
+            <div class="country-selector" id="countrySelector">
+              <input type="text" class="country-search-input" id="fCountrySearch" placeholder="搜索国家..." autocomplete="off">
+              <input type="hidden" id="fCountry" value="">
+              <div class="country-dropdown" id="countryDropdown"></div>
+            </div>
           </div>
           <div class="form-group">
             <label>客户阶段</label>
@@ -1502,15 +1567,40 @@ Modal - 首次登录修改密码
 
 <script>
 // ============================================
-// 欧洲国家列表（44个欧洲国家，完整）
+// 全世界所有国家列表（按中文拼音/英文排序）
 // ============================================
-const EUROPE_COUNTRIES = [
-  "阿尔巴尼亚","安道尔","奥地利","白俄罗斯","比利时","波斯尼亚和黑塞哥维那",
-  "保加利亚","克罗地亚","塞浦路斯","捷克","丹麦","爱沙尼亚","芬兰","法国",
-  "德国","希腊","匈牙利","冰岛","爱尔兰","意大利","拉脱维亚","列支敦士登",
-  "立陶宛","卢森堡","马耳他","摩尔多瓦","摩纳哥","黑山","荷兰","北马其顿",
-  "挪威","波兰","葡萄牙","罗马尼亚","圣马力诺","塞尔维亚","斯洛伐克","斯洛文尼亚",
-  "西班牙","瑞典","瑞士","乌克兰","英国","梵蒂冈"
+const ALL_COUNTRIES = [
+  "阿尔巴尼亚","阿尔及利亚","阿富汗","阿根廷","阿联酋","阿鲁巴","阿曼","阿塞拜疆",
+  "埃及","埃塞俄比亚","爱尔兰","爱沙尼亚","安道尔","安哥拉","安圭拉","安提瓜和巴布达",
+  "奥地利","奥兰群岛","澳大利亚","巴巴多斯","巴布亚新几内亚","巴哈马","巴基斯坦","巴拉圭",
+  "巴林","巴拿马","巴西","白俄罗斯","保加利亚","北马里亚纳群岛","北马其顿","贝宁",
+  "比利时","秘鲁","冰岛","波多黎各","波黑","波兰","玻利维亚","伯利兹",
+  "博茨瓦纳","不丹","布基纳法索","布隆迪","布韦岛","朝鲜","赤道几内亚","丹麦",
+  "德国","东帝汶","多哥","多米尼加","多米尼克","俄罗斯","厄瓜多尔","厄立特里亚",
+  "法国","法罗群岛","法属波利尼西亚","法属圭亚那","法属南部领地","梵蒂冈","菲律宾","斐济",
+  "芬兰","佛得角","福克兰群岛","冈比亚","刚果","刚果民主共和国","哥伦比亚","哥斯达黎加",
+  "格林纳达","格陵兰","格鲁吉亚","关岛","古巴","瓜德罗普","圭亚那","哈萨克斯坦",
+  "海地","韩国","荷兰","荷属圣马丁","黑山","赫德岛和麦克唐纳群岛","洪都拉斯","基里巴斯",
+  "吉布提","吉尔吉斯斯坦","几内亚","几内亚比绍","加拿大","加纳","加蓬","柬埔寨",
+  "捷克","津巴布韦","喀麦隆","卡塔尔","开曼群岛","科科斯群岛","科摩罗","科索沃",
+  "科特迪瓦","科威特","克罗地亚","肯尼亚","库克群岛","库拉索","拉脱维亚","莱索托",
+  "老挝","黎巴嫩","立陶宛","利比里亚","利比亚","列支敦士登","留尼汪","卢森堡",
+  "卢旺达","罗马尼亚","马达加斯加","马尔代夫","马耳他","马拉维","马来西亚","马里",
+  "马利","马提尼克","马约特","马恩岛","马绍尔群岛","马其顿","毛里求斯","毛里塔尼亚",
+  "美国","美属萨摩亚","美属维尔京群岛","蒙古","蒙特塞拉特","孟加拉国","密克罗尼西亚","缅甸",
+  "摩尔多瓦","摩洛哥","摩纳哥","莫桑比克","墨西哥","纳米比亚","南非","南乔治亚和南桑威奇群岛",
+  "南苏丹","南极洲","瑙鲁","尼泊尔","尼加拉瓜","尼日尔","尼日利亚","纽埃",
+  "挪威","诺福克岛","帕劳","皮特凯恩群岛","葡萄牙","日本","瑞典","瑞士",
+  "萨尔瓦多","萨摩亚","塞尔维亚","塞拉利昂","塞内加尔","塞浦路斯","塞舌尔","沙特阿拉伯",
+  "圣巴泰勒米","圣多美和普林西比","圣赫勒拿","圣基茨和尼维斯","圣卢西亚","圣马丁","圣马力诺","圣皮埃尔和密克隆",
+  "圣文森特和格林纳丁斯","斯里兰卡","斯洛伐克","斯洛文尼亚","斯瓦尔巴和扬马延","斯威士兰","苏丹","苏里南",
+  "所罗门群岛","索马里","塔吉克斯坦","泰国","坦桑尼亚","汤加","特克斯和凯科斯群岛","特里斯坦达库尼亚",
+  "特立尼达和多巴哥","突尼斯","图瓦卢","土耳其","土库曼斯坦","托克劳","瓦利斯和富图纳","瓦努阿图",
+  "危地马拉","委内瑞拉","文莱","乌干达","乌克兰","乌拉圭","乌兹别克斯坦","西班牙",
+  "西撒哈拉","希腊","新加坡","新喀里多尼亚","新西兰","匈牙利","叙利亚","牙买加",
+  "亚美尼亚","也门","伊拉克","伊朗","以色列","意大利","印度","印度尼西亚",
+  "英国","英属印度洋领地","英属维尔京群岛","约旦","越南","赞比亚","乍得","直布罗陀",
+  "智利","中非共和国","中国","中国澳门","中国台湾","中国香港"
 ];
 
 // ============================================
@@ -2114,6 +2204,9 @@ function openAddModal() {
   document.getElementById('editId').value = '';
   document.getElementById('customerForm').reset();
   document.getElementById('fStage').value = 'lead';
+  document.getElementById('fCountry').value = '';
+  document.getElementById('fCountrySearch').value = '';
+  selectedCountry = '';
   document.getElementById('customerModal').classList.add('active');
 }
 
@@ -2127,6 +2220,8 @@ function openEditModal(id) {
   document.getElementById('fPhone').value = c.phone || '';
   document.getElementById('fEmail').value = c.email || '';
   document.getElementById('fCountry').value = c.country || '';
+  document.getElementById('fCountrySearch').value = c.country || '';
+  selectedCountry = c.country || '';
   document.getElementById('fStage').value = c.stage || 'lead';
   document.getElementById('fBudget').value = c.budget || '';
   document.getElementById('fCloseDate').value = c.estimatedCloseDate || '';
@@ -2404,16 +2499,68 @@ async function initApp() {
 }
 
 // ============================================
-// 填充国家列表
+// 搜索式国家选择器
 // ============================================
+let selectedCountry = '';
+
 function populateCountries() {
-  const sel = document.getElementById('fCountry');
-  EUROPE_COUNTRIES.forEach(function(c) {
-    var opt = document.createElement('option');
-    opt.value = c;
-    opt.textContent = c;
-    sel.appendChild(opt);
+  const dropdown = document.getElementById('countryDropdown');
+  const searchInput = document.getElementById('fCountrySearch');
+  const hiddenInput = document.getElementById('fCountry');
+
+  function renderCountries(filter) {
+    dropdown.innerHTML = '';
+    var matched = [];
+    if (!filter) {
+      matched = ALL_COUNTRIES;
+    } else {
+      var lower = filter.toLowerCase();
+      matched = ALL_COUNTRIES.filter(function(c) {
+        return c.toLowerCase().indexOf(lower) !== -1;
+      });
+    }
+    if (matched.length === 0) {
+      var empty = document.createElement('div');
+      empty.className = 'country-option country-empty';
+      empty.textContent = '无匹配国家';
+      dropdown.appendChild(empty);
+      return;
+    }
+    matched.forEach(function(c) {
+      var opt = document.createElement('div');
+      opt.className = 'country-option';
+      if (c === selectedCountry) opt.classList.add('selected');
+      opt.textContent = c;
+      opt.addEventListener('click', function() {
+        selectedCountry = c;
+        hiddenInput.value = c;
+        searchInput.value = c;
+        dropdown.classList.remove('active');
+        document.querySelectorAll('.country-option').forEach(function(o) { o.classList.remove('selected'); });
+        opt.classList.add('selected');
+      });
+      dropdown.appendChild(opt);
+    });
+  }
+
+  searchInput.addEventListener('input', function() {
+    renderCountries(this.value);
+    if (!dropdown.classList.contains('active')) dropdown.classList.add('active');
   });
+
+  searchInput.addEventListener('focus', function() {
+    renderCountries(this.value);
+    dropdown.classList.add('active');
+  });
+
+  document.addEventListener('click', function(e) {
+    if (!document.getElementById('countrySelector').contains(e.target)) {
+      dropdown.classList.remove('active');
+    }
+  });
+
+  // 初始渲染所有国家
+  renderCountries('');
 }
 
 // ============================================
