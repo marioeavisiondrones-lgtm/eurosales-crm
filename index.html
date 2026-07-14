@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EuroSales CRM · 欧洲销售客户管理系统</title>
+<title>Eavision 亚太一区客户管理平台</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
 <style>
@@ -948,11 +948,18 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
 <div class="login-page" id="loginPage">
   <div class="login-left">
     <div class="brand">
-      <div class="brand-icon">ES</div>
-      <div class="brand-text">Euro<span>Sales</span> CRM</div>
+      <div class="brand-icon">
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+          <circle cx="16" cy="16" r="15" stroke="#D97706" stroke-width="2"/>
+          <path d="M10 20C10 20 13 10 16 10C19 10 22 20 22 20" stroke="#D97706" stroke-width="2" stroke-linecap="round"/>
+          <path d="M8 16C8 16 12 8 16 8C20 8 24 16 24 16" stroke="#D97706" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="3 3"/>
+          <circle cx="16" cy="10" r="1.5" fill="#D97706"/>
+        </svg>
+      </div>
+      <div class="brand-text">Eavision</div>
     </div>
-    <h1>欧洲销售<br>客户管理平台</h1>
-    <p>统一管理团队意向客户，实时追踪销售进度，洞察转化瓶颈，让每一笔生意都尽在掌握。</p>
+    <h1>亚太一区<br>客户管理平台</h1>
+    <p>统一管理亚太一区团队意向客户，实时追踪销售进度，洞察转化瓶颈，让每一笔生意都尽在掌握。</p>
   </div>
   <div class="login-right">
     <div class="login-card">
@@ -980,8 +987,14 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
 <div class="app-layout" id="appLayout">
   <aside class="sidebar">
     <div class="sidebar-brand">
-      <div class="brand-icon">ES</div>
-      <div class="brand-text">Euro<span>Sales</span></div>
+      <div class="brand-icon">
+        <svg width="22" height="22" viewBox="0 0 32 32" fill="none">
+          <circle cx="16" cy="16" r="15" stroke="#D97706" stroke-width="2"/>
+          <path d="M10 20C10 20 13 10 16 10C19 10 22 20 22 20" stroke="#D97706" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="16" cy="10" r="1.5" fill="#D97706"/>
+        </svg>
+      </div>
+      <div class="brand-text">Eavision</div>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-item active" data-page="dashboard">
@@ -1226,8 +1239,9 @@ Modal - 账号管理 (新增/编辑)
         <input type="hidden" id="salesEditId" value="">
         <div class="form-grid">
           <div class="form-group full">
-            <label>姓名 *</label>
-            <input type="text" id="fSalesName" required placeholder="e.g. 张三 / John Smith">
+            <label>销售姓名 *</label>
+            <input type="text" id="fSalesName" required placeholder="e.g. Mario / 张三">
+            <small style="color:var(--navy-400);font-size:.75rem;">登录账号自动使用此姓名</small>
           </div>
           <div class="form-group full">
             <label>角色 *</label>
@@ -1235,10 +1249,6 @@ Modal - 账号管理 (新增/编辑)
               <option value="sales">销售</option>
               <option value="manager">管理员</option>
             </select>
-          </div>
-          <div class="form-group full">
-            <label>登录账号 *</label>
-            <input type="text" id="fSalesUsername" required placeholder="e.g. zhang_san" autocomplete="off">
           </div>
           <div class="form-group full">
             <label>登录密码 *</label>
@@ -1966,10 +1976,8 @@ function openAddSalesModal() {
   document.getElementById('salesEditId').value = '';
   document.getElementById('fSalesName').value = '';
   document.getElementById('fSalesRole').value = 'sales';
-  document.getElementById('fSalesUsername').value = '';
   document.getElementById('fSalesPassword').value = '';
   document.getElementById('fSalesRole').disabled = false;
-  document.getElementById('fSalesUsername').disabled = false;
   document.getElementById('fSalesPassword').required = true;
   document.getElementById('fSalesPassword').placeholder = 'e.g. 设置初始密码，至少4位';
   document.getElementById('salesModal').classList.add('active');
@@ -1983,8 +1991,6 @@ function openEditSalesModal(id) {
   document.getElementById('fSalesName').value = u.name;
   document.getElementById('fSalesRole').value = u.role || 'sales';
   document.getElementById('fSalesRole').disabled = true;
-  document.getElementById('fSalesUsername').value = u.username || '';
-  document.getElementById('fSalesUsername').disabled = true;
   document.getElementById('fSalesPassword').value = '';
   document.getElementById('fSalesPassword').required = false;
   document.getElementById('fSalesPassword').placeholder = '\u4E0D\u586B\u5219\u4FDD\u6301\u539F\u5BC6\u7801';
@@ -1995,7 +2001,6 @@ async function saveSalesAccount() {
   const id = document.getElementById('salesEditId').value;
   const name = document.getElementById('fSalesName').value.trim();
   const role = document.getElementById('fSalesRole').value;
-  const username = document.getElementById('fSalesUsername').value.trim();
   const password = document.getElementById('fSalesPassword').value.trim();
   if (!name) {
     toast('\u8BF7\u8F93\u5165\u59D3\u540D', 'error');
@@ -2009,12 +2014,11 @@ async function saveSalesAccount() {
       await api('POST', '/api/users', payload);
       toast('\u8D26\u53F7\u5DF2\u66F4\u65B0');
     } else {
-      // 新增模式
-      if (!username) { toast('\u8BF7\u8F93\u5165\u767B\u5F55\u8D26\u53F7', 'error'); return; }
+      // 新增模式：使用销售姓名作为登录账号
       if (!password || password.length < 4) { toast('\u8BF7\u8F93\u5165\u5BC6\u7801\uFF08\u81F3\u5C114\u4F4D\uFF09', 'error'); return; }
-      await api('POST', '/api/users', { action: 'add', name: name, role: role, username: username, password: password });
+      await api('POST', '/api/users', { action: 'add', name: name, role: role, username: name, password: password });
       var roleLabel = role === 'manager' ? '\u7BA1\u7406\u5458' : '\u9500\u552E';
-      toast('\u5DF2\u6DFB\u52A0' + roleLabel + '\u8D26\u53F7\uFF0C\u8D26\u53F7: ' + username);
+      toast('\u5DF2\u6DFB\u52A0' + roleLabel + '\u8D26\u53F7\uFF0C\u8D26\u53F7: ' + name);
     }
     AppState.users = await api('GET', '/api/users');
     closeModal();
