@@ -715,6 +715,29 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
   min-height: 100px;
 }
 .kanban-col-body.drag-over { background: rgba(59,130,246,.06); border-radius: 6px; }
+.kanban-expand {
+  padding: 8px 12px;
+  text-align: center;
+}
+.kanban-expand .expand-hint {
+  display: block;
+  font-size: .78rem;
+  color: var(--accent-500);
+  cursor: pointer;
+  padding: 4px 0;
+  border-radius: 4px;
+  transition: background .15s;
+}
+.kanban-expand .expand-hint:hover { background: var(--accent-50); }
+.kanban-expand.expanded .expand-hint { color: var(--navy-400); }
+.kanban-expand .expand-cards {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height .3s ease;
+}
+.kanban-expand.expanded .expand-cards {
+  max-height: none;
+}
 .kanban-card {
   background: var(--white);
   border-radius: var(--radius-sm);
@@ -2598,35 +2621,40 @@ function rejectCustomer(id) {
 function renderKanban() {
   const customers = getFilteredCustomers();
   const board = document.getElementById('kanbanBoard');
+  // 每列最大显示卡片数（超过则折叠）
+  const MAX_VISIBLE = 8;
+  function colHtml(s) {
+    const cards = customers.filter(function(c) { return c.stage === s.id; });
+    var cardHtml = cards.length ? cards.map(function(c) { return renderKanbanCard(c); }).join('') : '<div class="empty-col">\u6682\u65E0\u5BA2\u6237</div>';
+    var expandBtn = '';
+    if (cards.length > MAX_VISIBLE) {
+      var hidden = cards.slice(MAX_VISIBLE).map(function(c) { return renderKanbanCard(c); }).join('');
+      expandBtn = '<div class="kanban-expand" data-stage="' + s.id + '">' +
+        '<span class="expand-hint" data-orig-text="\u67E5\u770B\u5168\u90E8 ' + cards.length + ' \u4E2A\u5BA2\u6237 \u25BC">\u67E5\u770B\u5168\u90E8 ' + cards.length + ' \u4E2A\u5BA2\u6237 \u25BC</span>' +
+        '<div class="expand-cards">' + hidden + '</div>' +
+      '</div>';
+      cardHtml = cards.slice(0, MAX_VISIBLE).map(function(c) { return renderKanbanCard(c); }).join('');
+    }
+    return '<div class="kanban-col" data-stage="' + s.id + '">' +
+      '<div class="kanban-col-header">' +
+        '<span class="col-title">' + s.icon + ' ' + s.label + '</span>' +
+        '<span class="col-count">' + cards.length + '</span>' +
+      '</div>' +
+      '<div class="kanban-col-body" data-stage="' + s.id + '">' +
+        cardHtml +
+        expandBtn +
+      '</div>' +
+    '</div>';
+  }
   // 第一行：主要阶段
   var firstRow = '';
   STAGES.filter(function(s) { return s.id !== 'long_term' && s.id !== 'stopped'; }).forEach(function(s) {
-    const cards = customers.filter(function(c) { return c.stage === s.id; });
-    firstRow +=
-      '<div class="kanban-col" data-stage="' + s.id + '">' +
-        '<div class="kanban-col-header">' +
-          '<span class="col-title">' + s.icon + ' ' + s.label + '</span>' +
-          '<span class="col-count">' + cards.length + '</span>' +
-        '</div>' +
-        '<div class="kanban-col-body" data-stage="' + s.id + '">' +
-          (cards.length ? cards.map(function(c) { return renderKanbanCard(c); }).join('') : '<div class="empty-col">\u6682\u65E0\u5BA2\u6237</div>') +
-        '</div>' +
-      '</div>';
+    firstRow += colHtml(s);
   });
   // 第二行：长期跟进 + 停止跟进
   var secondRow = '';
   STAGES.filter(function(s) { return s.id === 'long_term' || s.id === 'stopped'; }).forEach(function(s) {
-    const cards = customers.filter(function(c) { return c.stage === s.id; });
-    secondRow +=
-      '<div class="kanban-col" data-stage="' + s.id + '">' +
-        '<div class="kanban-col-header">' +
-          '<span class="col-title">' + s.icon + ' ' + s.label + '</span>' +
-          '<span class="col-count">' + cards.length + '</span>' +
-        '</div>' +
-        '<div class="kanban-col-body" data-stage="' + s.id + '">' +
-          (cards.length ? cards.map(function(c) { return renderKanbanCard(c); }).join('') : '<div class="empty-col">\u6682\u65E0\u5BA2\u6237</div>') +
-        '</div>' +
-      '</div>';
+    secondRow += colHtml(s);
   });
   board.innerHTML = '<div class="kanban-row">' + firstRow + '</div><div class="kanban-row" style="margin-top:16px;">' + secondRow + '</div>';
   document.getElementById('kanbanBadge').textContent = customers.length;
@@ -2756,6 +2784,15 @@ function setupDragDrop() {
         doStageUpdate(c, stage);
       }
       dragSrc = null;
+    });
+  });
+  // 展开/折叠展开卡片
+  document.querySelectorAll('.expand-hint').forEach(function(el) {
+    el.addEventListener('click', function(e) {
+      e.stopPropagation();
+      var wrap = this.closest('.kanban-expand');
+      var isExpanded = wrap.classList.toggle('expanded');
+      this.textContent = isExpanded ? '\u6536\u8D77 \u25B2' : this.dataset.origText;
     });
   });
 }
