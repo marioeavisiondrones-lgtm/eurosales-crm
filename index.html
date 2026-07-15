@@ -605,6 +605,7 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
 }
 .funnel-bar .bar-fill.active { background: linear-gradient(90deg, var(--accent-500), var(--accent-400)); }
 .funnel-bar .bar-fill.won { background: linear-gradient(90deg, var(--emerald-500), #34d399); }
+.funnel-bar .bar-fill.pending { background: linear-gradient(90deg, #d97706, #f59e0b); }
 .funnel-bar .bar-fill.lost { background: var(--navy-300); }
 .activity-list { list-style: none; }
 .activity-item {
@@ -625,6 +626,7 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
 .activity-dot.price_negotiation { background: #d97706; }
 .activity-dot.prototype { background: #6366f1; }
 .activity-dot.contracting { background: var(--accent-500); }
+.activity-dot.pending_approval { background: #d97706; }
 .activity-dot.signed { background: var(--emerald-500); }
 .activity-text { flex: 1; font-size: .85rem; color: var(--navy-600); line-height: 1.4; }
 .activity-text strong { color: var(--navy-800); }
@@ -909,6 +911,7 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
 .stage-badge.price_negotiation { background: #fef3c7; color: #d97706; }
 .stage-badge.prototype { background: #e0e7ff; color: #6366f1; }
 .stage-badge.contracting { background: var(--accent-100); color: var(--accent-600); }
+.stage-badge.pending_approval { background: #fef3c7; color: #d97706; }
 .stage-badge.signed { background: var(--emerald-100); color: var(--emerald-500); }
 
 /* 列表 */
@@ -1321,6 +1324,7 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
         <span class="nav-icon">&#x1F4CB;</span>
         <span class="nav-text">看板</span>
         <span class="badge" id="kanbanBadge">0</span>
+        <span class="badge" id="pendingBadge" style="display:none;background:#d97706;">0</span>
       </div>
       <div class="nav-item" data-page="list">
         <span class="nav-icon">&#x1F4DD;</span>
@@ -1889,9 +1893,10 @@ const STAGES = [
   { id: 'price_negotiation', label: '价格磋商', icon: '\u{1F4B0}' },
   { id: 'prototype', label: '样机推进', icon: '\u{1F4BF}' },
   { id: 'contracting', label: '签约中', icon: '\u{1F4DC}' },
+  { id: 'pending_approval', label: '待审核', icon: '\u{1F6AB}' },
   { id: 'signed', label: '已签约并打款', icon: '\u2705' }
 ];
-const ACTIVE_STAGES = ['first_reply','needs_analysis','price_negotiation','prototype','contracting'];
+const ACTIVE_STAGES = ['first_reply','needs_analysis','price_negotiation','prototype','contracting','pending_approval'];
 
 // ============================================
 // API 封装 - 所有数据操作均通过 fetch 调用
@@ -2308,7 +2313,7 @@ function renderFunnel(customers) {
   STAGES.forEach(function(s) {
     const count = customers.filter(function(c) { return c.stage === s.id; }).length;
     const pct = maxCount > 0 ? (count / maxCount * 100) : 0;
-    const barClass = s.id === 'signed' ? 'won' : 'active';
+    const barClass = s.id === 'signed' ? 'won' : s.id === 'pending_approval' ? 'pending' : 'active';
     html +=
       '<div class="funnel-bar">' +
         '<span class="stage-label">' + s.icon + ' ' + s.label + '</span>' +
@@ -2482,6 +2487,24 @@ function doStageUpdate(c, stage) {
   });
 }
 
+// 管理员审核通过
+function approveCustomer(id) {
+  var c = AppState.customers.find(function(c) { return c.id === id; });
+  if (!c) return;
+  if (!confirm('\u786E\u5B9A\u901A\u8FC7\u5BA1\u6838\uFF0C\u5C06\u201C' + c.companyName + '\u201D\u8F6C\u4E3A\u5DF2\u7B7E\u7EA6\u5E76\u6253\u6B3E\u5417\uFF1F')) return;
+  doStageUpdate(c, 'signed');
+  toast('\u2705 \u5BA1\u6838\u901A\u8FC7\uFF0C\u5BA2\u6237\u5DF2\u8F6C\u4E3A\u5DF2\u7B7E\u7EA6\u5E76\u6253\u6B3E');
+}
+
+// 管理员审核驳回
+function rejectCustomer(id) {
+  var c = AppState.customers.find(function(c) { return c.id === id; });
+  if (!c) return;
+  if (!confirm('\u786E\u5B9A\u9A73\u56DE\u5BA1\u6838\uFF0C\u5C06\u201C' + c.companyName + '\u201D\u8FD4\u56DE\u7B7E\u7EA6\u4E2D\u5417\uFF1F')) return;
+  doStageUpdate(c, 'contracting');
+  toast('\u{1F6AB} \u5BA1\u6838\u5DF2\u9A73\u56DE\uFF0C\u5BA2\u6237\u5DF2\u8FD4\u56DE\u7B7E\u7EA6\u4E2D');
+}
+
 function renderKanban() {
   const customers = getFilteredCustomers();
   const board = document.getElementById('kanbanBoard');
@@ -2502,11 +2525,25 @@ function renderKanban() {
   board.innerHTML = html;
   document.getElementById('kanbanBadge').textContent = customers.length;
   document.getElementById('listBadge').textContent = getVisibleCustomers().length;
+  // 更新待审核角标
+  var pendingCount = getVisibleCustomers().filter(function(c) { return c.stage === 'pending_approval'; }).length;
+  var pendingBadge = document.getElementById('pendingBadge');
+  if (pendingCount > 0 && AppState.currentUser.role === 'manager') {
+    pendingBadge.textContent = pendingCount;
+    pendingBadge.style.display = '';
+  } else {
+    pendingBadge.style.display = 'none';
+  }
   setupDragDrop();
 }
 
 function renderKanbanCard(c) {
   const u = getUserName(c.assignedTo || c.createdBy);
+  var isAdmin = AppState.currentUser.role === 'manager';
+  var extraActions = '';
+  if (c.stage === 'pending_approval' && isAdmin) {
+    extraActions = '<div class="card-approval-actions"><button class="btn btn-sm approve-btn" data-id="' + c.id + '" style="background:var(--emerald-500);color:#fff;border:none;padding:3px 10px;border-radius:4px;cursor:pointer;font-size:.75rem;">\u2705 通过</button><button class="btn btn-sm reject-btn" data-id="' + c.id + '" style="background:var(--red-500);color:#fff;border:none;padding:3px 10px;border-radius:4px;cursor:pointer;font-size:.75rem;margin-left:6px;">\u2716 驳回</button></div>';
+  }
   return (
     '<div class="kanban-card" draggable="true" data-id="' + c.id + '">' +
       '<div class="card-actions">' +
@@ -2519,6 +2556,7 @@ function renderKanbanCard(c) {
         '<span class="card-budget">' + ((c.annualQty || 0) > 0 ? c.annualQty + ' \u53F0/\u5E74' : '') + '</span>' +
         '<span class="card-owner">\u{1F464} ' + u + '</span>' +
       '</div>' +
+      extraActions +
       (c.stage === 'signed' ? '<div class="card-signed-info">\u{1F69A} \u5DF2\u51FA\u8D27 ' + (c.shippedQty || 0) + ' | \u{1F4C5} \u8BA1\u5212 ' + (c.quarterlyPlanQty || 0) + '</div>' : '') +
       (c.blocker ? '<div class="card-blocker">\u26A0\uFE0F ' + c.blocker + '</div>' : '') +
     '</div>'
@@ -2551,6 +2589,21 @@ function setupDragDrop() {
         deleteCustomer(card.dataset.id);
       });
     }
+    // 审核通过/驳回
+    var approveBtn = card.querySelector('.approve-btn');
+    if (approveBtn) {
+      approveBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        approveCustomer(card.dataset.id);
+      });
+    }
+    var rejectBtn = card.querySelector('.reject-btn');
+    if (rejectBtn) {
+      rejectBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        rejectCustomer(card.dataset.id);
+      });
+    }
   });
   document.querySelectorAll('.kanban-col-body').forEach(function(col) {
     col.addEventListener('dragover', function(e) {
@@ -2573,6 +2626,13 @@ function setupDragDrop() {
           document.getElementById('popupDealProbability').value = '';
           document.getElementById('analysisPopupError').textContent = '';
           document.getElementById('analysisPopupModal').classList.add('active');
+          dragSrc = null;
+          return;
+        }
+        // 非管理员拖到已签约 → 进入待审核
+        if (stage === 'signed' && AppState.currentUser.role !== 'manager') {
+          toast('\u{1F6AB} \u5DF2\u63D0\u4EA4\u5BA1\u6838\uFF0C\u8BF7\u7B49\u5F85\u7BA1\u7406\u5458\u5BA1\u6279', 'info');
+          doStageUpdate(c, 'pending_approval');
           dragSrc = null;
           return;
         }
@@ -3001,6 +3061,15 @@ function refreshAll() {
   }
   document.getElementById('kanbanBadge').textContent = getVisibleCustomers().length;
   document.getElementById('listBadge').textContent = getVisibleCustomers().length;
+  // 更新待审核角标
+  var pendingCount = getVisibleCustomers().filter(function(c) { return c.stage === 'pending_approval'; }).length;
+  var pendingBadge = document.getElementById('pendingBadge');
+  if (pendingCount > 0 && AppState.currentUser.role === 'manager') {
+    pendingBadge.textContent = pendingCount;
+    pendingBadge.style.display = '';
+  } else {
+    pendingBadge.style.display = 'none';
+  }
 }
 
 // ============================================
