@@ -606,6 +606,8 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
 .funnel-bar .bar-fill.active { background: linear-gradient(90deg, var(--accent-500), var(--accent-400)); }
 .funnel-bar .bar-fill.won { background: linear-gradient(90deg, var(--emerald-500), #34d399); }
 .funnel-bar .bar-fill.pending { background: linear-gradient(90deg, #d97706, #f59e0b); }
+.funnel-bar .bar-fill.stopped { background: linear-gradient(90deg, #9ca3af, #d1d5db); }
+.funnel-bar .bar-fill.long_term { background: linear-gradient(90deg, #6366f1, #818cf8); }
 .funnel-bar .bar-fill.lost { background: var(--navy-300); }
 .activity-list { list-style: none; }
 .activity-item {
@@ -627,6 +629,8 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
 .activity-dot.prototype { background: #6366f1; }
 .activity-dot.contracting { background: var(--accent-500); }
 .activity-dot.pending_approval { background: #d97706; }
+.activity-dot.long_term { background: #6366f1; }
+.activity-dot.stopped { background: #6b7280; }
 .activity-dot.signed { background: var(--emerald-500); }
 .activity-text { flex: 1; font-size: .85rem; color: var(--navy-600); line-height: 1.4; }
 .activity-text strong { color: var(--navy-800); }
@@ -912,6 +916,8 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
 .stage-badge.prototype { background: #e0e7ff; color: #6366f1; }
 .stage-badge.contracting { background: var(--accent-100); color: var(--accent-600); }
 .stage-badge.pending_approval { background: #fef3c7; color: #d97706; }
+.stage-badge.long_term { background: #e0e7ff; color: #6366f1; }
+.stage-badge.stopped { background: #f3f4f6; color: #6b7280; }
 .stage-badge.signed { background: var(--emerald-100); color: var(--emerald-500); }
 
 /* 列表 */
@@ -1396,6 +1402,18 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
             <div class="value" id="statHigh">0</div>
             <div class="sub">样机推进 & 签约中</div>
           </div>
+          <div class="stat-card clickable" data-dash="long_term">
+            <div class="stat-icon" style="background:#e0e7ff;color:#6366f1;">&#x1F504;</div>
+            <div class="label">长期跟进</div>
+            <div class="value" id="statLongTerm">0</div>
+            <div class="sub">需长期培育的客户</div>
+          </div>
+          <div class="stat-card clickable" data-dash="stopped">
+            <div class="stat-icon" style="background:#f3f4f6;color:#6b7280;">&#x1F6AB;</div>
+            <div class="label">停止跟进</div>
+            <div class="value" id="statStopped">0</div>
+            <div class="sub">已停止跟进的客户</div>
+          </div>
           <div class="stat-card clickable" data-dash="orders">
             <div class="stat-icon emerald">&#x1F4B0;</div>
             <div class="label">预计订单数量</div>
@@ -1613,7 +1631,9 @@ Modal - 新增/编辑客户
               <option value="price_negotiation">价格磋商</option>
               <option value="prototype">样机推进</option>
               <option value="contracting">签约中</option>
-              <option value="signed">已签约并打款</option>
+          <option value="long_term">长期跟进</option>
+          <option value="stopped">停止跟进</option>
+          <option value="signed">已签约并打款</option>
             </select>
           </div>
           <div class="form-group">
@@ -1643,6 +1663,10 @@ Modal - 新增/编辑客户
           <div class="form-group full analysis-fields" id="analysisFieldProb" style="display:none;">
             <label>成交可能性分析</label>
             <textarea id="fDealProbability" rows="2" placeholder="评估成交可能性、时间预期、风险因素等..."></textarea>
+          </div>
+          <div class="form-group full" id="stopReasonField" style="display:none;">
+            <label>停止跟进原因</label>
+            <textarea id="fStopReason" rows="2" placeholder="客户不感兴趣 / 预算不足 / 需求不匹配..." style="border-left:3px solid #9ca3af;padding-left:14px;"></textarea>
           </div>
           <div class="form-group full">
             <label>当前卡点 / 障碍</label>
@@ -1775,6 +1799,35 @@ Modal - 仪表盘下钻列表
 </div>
 
 <!-- ============================================
+Modal - 拖拽到停止跟进填写原因
+============================================ -->
+<div class="modal-overlay" id="stopReasonModal">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-header">
+      <h3>&#x1F6AB; 停止跟进</h3>
+      <button class="modal-close" id="stopReasonCloseBtn">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p style="color:var(--navy-400);margin-bottom:16px;font-size:.85rem;">客户即将标记为"停止跟进"，请填写原因以完成操作。</p>
+      <form id="stopReasonForm">
+        <div class="form-grid">
+          <div class="form-group full">
+            <label>停止跟进原因 *</label>
+            <textarea id="stopReasonInput" rows="3" placeholder="客户不感兴趣 / 预算不足 / 需求不匹配 / 无法联系等..." style="width:100%;padding:8px 12px;border:1px solid var(--navy-200);border-radius:var(--radius-sm);font-size:.85rem;font-family:var(--font-sans);resize:vertical;box-sizing:border-box;"></textarea>
+          </div>
+          <div class="form-group full">
+            <div class="login-error" id="stopReasonError"></div>
+          </div>
+          <div class="form-group full">
+            <button type="submit" class="btn btn-primary" style="width:100%;">确认停止跟进</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================
 Modal - 拖拽到需求分析填写分析
 ============================================ -->
 <div class="modal-overlay" id="analysisPopupModal">
@@ -1890,9 +1943,11 @@ const STAGES = [
   { id: 'prototype', label: '样机推进', icon: '\u{1F4BF}' },
   { id: 'contracting', label: '签约中', icon: '\u{1F4DC}' },
   { id: 'pending_approval', label: '待审核', icon: '\u{1F6AB}' },
+  { id: 'long_term', label: '长期跟进', icon: '\u{1F504}' },
+  { id: 'stopped', label: '停止跟进', icon: '\u{1F6AB}' },
   { id: 'signed', label: '已签约并打款', icon: '\u2705' }
 ];
-const ACTIVE_STAGES = ['first_reply','needs_analysis','price_negotiation','prototype','contracting','pending_approval'];
+const ACTIVE_STAGES = ['first_reply','needs_analysis','price_negotiation','prototype','contracting','pending_approval','long_term'];
 
 // ============================================
 // API 封装 - 所有数据操作均通过 fetch 调用
@@ -2297,6 +2352,10 @@ function renderDashboard() {
   // 高意向：样机推进、签约中
   var high = customers.filter(function(c) { return c.stage === 'prototype' || c.stage === 'contracting'; }).length;
   document.getElementById('statHigh').textContent = high;
+  var longTerm = customers.filter(function(c) { return c.stage === 'long_term'; }).length;
+  document.getElementById('statLongTerm').textContent = longTerm;
+  var stopped = customers.filter(function(c) { return c.stage === 'stopped'; }).length;
+  document.getElementById('statStopped').textContent = stopped;
   document.getElementById('statBudget').textContent = orderQty + ' \u5355';
   renderFunnel(customers);
   renderActivities();
@@ -2309,7 +2368,7 @@ function renderFunnel(customers) {
   STAGES.forEach(function(s) {
     const count = customers.filter(function(c) { return c.stage === s.id; }).length;
     const pct = maxCount > 0 ? (count / maxCount * 100) : 0;
-    const barClass = s.id === 'signed' ? 'won' : s.id === 'pending_approval' ? 'pending' : 'active';
+    const barClass = s.id === 'signed' ? 'won' : s.id === 'pending_approval' ? 'pending' : s.id === 'stopped' ? 'stopped' : s.id === 'long_term' ? 'long_term' : 'active';
     html +=
       '<div class="funnel-bar">' +
         '<span class="stage-label">' + s.icon + ' ' + s.label + '</span>' +
@@ -2407,6 +2466,12 @@ function openDashDrill(type) {
   } else if (type === 'high') {
     list = customers.filter(function(c) { return c.stage === 'prototype' || c.stage === 'contracting'; });
     title = '\u9AD8\u610F\u5411\u5BA2\u6237 (' + list.length + ')';
+  } else if (type === 'long_term') {
+    list = customers.filter(function(c) { return c.stage === 'long_term'; });
+    title = '\u957F\u671F\u8DDF\u8FDB\u5BA2\u6237 (' + list.length + ')';
+  } else if (type === 'stopped') {
+    list = customers.filter(function(c) { return c.stage === 'stopped'; });
+    title = '\u5DF2\u505C\u6B62\u8DDF\u8FDB\u5BA2\u6237 (' + list.length + ')';
   }
 
   document.getElementById('dashDrillTitle').textContent = title;
@@ -2484,9 +2549,13 @@ var dragPending = null;
 function doStageUpdate(c, stage) {
   c.stage = stage;
   c.updatedAt = new Date().toISOString();
+  var actText = getUserName(c.assignedTo || c.createdBy) + ' \u5C06 ' + c.companyName + ' \u79FB\u81F3' + getStageLabel(stage);
+  if (stage === 'stopped' && c.stopReason) {
+    actText += ' \uFF08\u539F\u56E0: ' + c.stopReason + '\uFF09';
+  }
   api('POST', '/api/customers', c).then(function() {
     return api('POST', '/api/activities', {
-      text: getUserName(c.assignedTo || c.createdBy) + ' \u5C06 ' + c.companyName + ' \u79FB\u81F3' + getStageLabel(stage),
+      text: actText,
       stage: stage
     });
   }).then(function() {
@@ -2572,6 +2641,7 @@ function renderKanbanCard(c) {
       '</div>' +
       extraActions +
       (c.stage === 'signed' ? '<div class="card-signed-info">\u{1F69A} \u5DF2\u51FA\u8D27 ' + (c.shippedQty || 0) + ' | \u{1F4C5} \u8BA1\u5212 ' + (c.quarterlyPlanQty || 0) + '</div>' : '') +
+      (c.stage === 'stopped' && c.stopReason ? '<div class="card-blocker" style="color:#6b7280;">\u{1F6AB} ' + c.stopReason + '</div>' : '') +
       (c.blocker ? '<div class="card-blocker">\u26A0\uFE0F ' + c.blocker + '</div>' : '') +
     '</div>'
   );
@@ -2650,6 +2720,15 @@ function setupDragDrop() {
           dragSrc = null;
           return;
         }
+        // 拖到停止跟进 → 弹出填写原因
+        if (stage === 'stopped') {
+          dragPending = { customer: c, stage: stage };
+          document.getElementById('stopReasonInput').value = '';
+          document.getElementById('stopReasonError').textContent = '';
+          document.getElementById('stopReasonModal').classList.add('active');
+          dragSrc = null;
+          return;
+        }
         // 其他阶段直接更新
         doStageUpdate(c, stage);
       }
@@ -2723,6 +2802,7 @@ function openAddModal() {
   document.getElementById('fQuarterlyPlanQty').value = '';
   document.getElementById('fCustomerAnalysis').value = '';
   document.getElementById('fDealProbability').value = '';
+  document.getElementById('fStopReason').value = '';
   document.getElementById('analysisFieldCustomer').style.display = 'none';
   document.getElementById('analysisFieldProb').style.display = 'none';
   document.getElementById('signedFieldShipped').style.display = 'none';
@@ -2754,12 +2834,14 @@ function openEditModal(id) {
   document.getElementById('signedFieldPlan').style.display = isSigned ? '' : 'none';
   document.getElementById('fCustomerAnalysis').value = c.customerAnalysis || '';
   document.getElementById('fDealProbability').value = c.dealProbability || '';
+  document.getElementById('fStopReason').value = c.stopReason || '';
   document.getElementById('fBlocker').value = c.blocker || '';
   document.getElementById('fNotes').value = c.notes || '';
-  // 编辑时根据阶段显示分析字段
-  var showAnalysis = c.stage !== 'first_reply' && c.stage !== 'signed';
+  // 编辑时根据阶段显示分析字段和停止原因字段
+  var showAnalysis = c.stage !== 'first_reply' && c.stage !== 'signed' && c.stage !== 'stopped' && c.stage !== 'long_term';
   document.getElementById('analysisFieldCustomer').style.display = showAnalysis ? '' : 'none';
   document.getElementById('analysisFieldProb').style.display = showAnalysis ? '' : 'none';
+  document.getElementById('stopReasonField').style.display = c.stage === 'stopped' ? '' : 'none';
   document.getElementById('customerModal').classList.add('active');
 }
 
@@ -2786,6 +2868,7 @@ async function saveCustomer() {
     quarterlyPlanQty: parseInt(document.getElementById('fQuarterlyPlanQty').value) || 0,
     customerAnalysis: document.getElementById('fCustomerAnalysis').value.trim(),
     dealProbability: document.getElementById('fDealProbability').value.trim(),
+    stopReason: document.getElementById('fStopReason').value.trim(),
     blocker: document.getElementById('fBlocker').value.trim(),
     notes: document.getElementById('fNotes').value.trim()
   };
@@ -2855,8 +2938,9 @@ function showDetail(id) {
     (c.stage === 'signed' ? '<div class="detail-item"><div class="label">\u5DF2\u51FA\u8D27\u6570\u91CF</div><div class="value">' + ((c.shippedQty || 0) > 0 ? c.shippedQty + ' \u53F0' : '0 \u53F0') + '</div></div>' : '') +
     (c.stage === 'signed' ? '<div class="detail-item"><div class="label">\u672C\u5B63\u5EA6\u8BA1\u5212\u51FA\u8D27</div><div class="value">' + ((c.quarterlyPlanQty || 0) > 0 ? c.quarterlyPlanQty + ' \u53F0' : '0 \u53F0') + '</div></div>' : '') +
     '<div class="detail-item"><div class="label">\u9884\u8BA1\u6210\u4EA4</div><div class="value">' + (c.estimatedCloseDate || '--') + '</div></div>' +
-    (c.customerAnalysis || c.stage !== 'first_reply' && c.stage !== 'signed' ? '<div class="detail-item full"><div class="label">\u5BA2\u6237\u5206\u6790</div><div class="value">' + (c.customerAnalysis || '\u65E0') + '</div></div>' : '') +
-    (c.dealProbability || c.stage !== 'first_reply' && c.stage !== 'signed' ? '<div class="detail-item full"><div class="label">\u6210\u4EA4\u53EF\u80FD\u6027\u5206\u6790</div><div class="value">' + (c.dealProbability || '\u65E0') + '</div></div>' : '') +
+    (c.customerAnalysis || c.stage !== 'first_reply' && c.stage !== 'signed' && c.stage !== 'stopped' && c.stage !== 'long_term' ? '<div class="detail-item full"><div class="label">\u5BA2\u6237\u5206\u6790</div><div class="value">' + (c.customerAnalysis || '\u65E0') + '</div></div>' : '') +
+    (c.dealProbability || c.stage !== 'first_reply' && c.stage !== 'signed' && c.stage !== 'stopped' && c.stage !== 'long_term' ? '<div class="detail-item full"><div class="label">\u6210\u4EA4\u53EF\u80FD\u6027\u5206\u6790</div><div class="value">' + (c.dealProbability || '\u65E0') + '</div></div>' : '') +
+    (c.stage === 'stopped' ? '<div class="detail-item full"><div class="label">\u505C\u6B62\u8DDF\u8FDB\u539F\u56E0</div><div class="value">' + (c.stopReason || '\u65E0') + '</div></div>' : '') +
     '<div class="detail-item full"><div class="label">\u5F53\u524D\u5361\u70B9</div><div class="value">' + (c.blocker || '\u65E0') + '</div></div>' +
     '<div class="detail-item full"><div class="label">\u8DDF\u8FDB\u5907\u6CE8</div><div class="value">' + (c.notes || '\u65E0') + '</div></div>' +
     '<div class="detail-item"><div class="label">\u8D1F\u8D23\u4EBA</div><div class="value">' + u + '</div></div>' +
@@ -3229,15 +3313,17 @@ document.addEventListener('DOMContentLoaded', async function() {
     renderDashboard();
   });
 
-  // 客户阶段切换 - 显示/隐藏签约字段和分析字段
+  // 客户阶段切换 - 显示/隐藏签约字段、分析字段、停止原因字段
   document.getElementById('fStage').addEventListener('change', function() {
     var isSigned = this.value === 'signed';
     document.getElementById('signedFieldShipped').style.display = isSigned ? '' : 'none';
     document.getElementById('signedFieldPlan').style.display = isSigned ? '' : 'none';
-    // 分析字段：需求分析及以上阶段显示（非首次回复、非已签约）
-    var showAnalysis = this.value !== 'first_reply' && this.value !== 'signed';
+    // 分析字段：需求分析及以上阶段显示（非首次回复、非已签约、非停止跟进、非长期跟进）
+    var showAnalysis = this.value !== 'first_reply' && this.value !== 'signed' && this.value !== 'stopped' && this.value !== 'long_term';
     document.getElementById('analysisFieldCustomer').style.display = showAnalysis ? '' : 'none';
     document.getElementById('analysisFieldProb').style.display = showAnalysis ? '' : 'none';
+    // 停止原因字段：仅停止跟进阶段显示
+    document.getElementById('stopReasonField').style.display = this.value === 'stopped' ? '' : 'none';
   });
 
   // 仪表盘下钻 - 点击统计卡片
@@ -3269,6 +3355,31 @@ document.addEventListener('DOMContentLoaded', async function() {
   });
   // 点击遮罩关闭弹窗
   document.getElementById('analysisPopupModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+      this.classList.remove('active');
+      dragPending = null;
+    }
+  });
+
+  // 拖拽到停止跟进 - 提交原因
+  document.getElementById('stopReasonForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    if (!dragPending) return;
+    var reason = document.getElementById('stopReasonInput').value.trim();
+    var errEl = document.getElementById('stopReasonError');
+    if (!reason) { errEl.textContent = '请填写停止跟进原因'; return; }
+    errEl.textContent = '';
+    var c = dragPending.customer;
+    c.stopReason = reason;
+    document.getElementById('stopReasonModal').classList.remove('active');
+    dragPending = null;
+    doStageUpdate(c, 'stopped');
+  });
+  document.getElementById('stopReasonCloseBtn').addEventListener('click', function() {
+    document.getElementById('stopReasonModal').classList.remove('active');
+    dragPending = null;
+  });
+  document.getElementById('stopReasonModal').addEventListener('click', function(e) {
     if (e.target === this) {
       this.classList.remove('active');
       dragPending = null;
