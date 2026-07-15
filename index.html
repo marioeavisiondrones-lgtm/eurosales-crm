@@ -1387,7 +1387,7 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
             <div class="sub">需求分析 & 价格磋商</div>
           </div>
           <div class="stat-card clickable" data-dash="high">
-            <div class="stat-icon" style="background:#fce7f3;color:#ec4899;">&#x{1F525};</div>
+            <div class="stat-icon" style="background:#fce7f3;color:#ec4899;">&#x1F525;</div>
             <div class="label">高意向客户</div>
             <div class="value" id="statHigh">0</div>
             <div class="sub">样机推进 & 签约中</div>
@@ -1740,6 +1740,38 @@ Modal - 仪表盘下钻列表
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" id="dashDrillCloseModalBtn">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================
+Modal - 拖拽到需求分析填写分析
+============================================ -->
+<div class="modal-overlay" id="analysisPopupModal">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-header">
+      <h3>&#x1F4AD; 客户已进入需求分析阶段</h3>
+    </div>
+    <div class="modal-body">
+      <p style="color:var(--navy-400);margin-bottom:16px;font-size:.85rem;">客户即将从"首次回复"推进到"需求分析"，请填写以下信息以完成阶段更新。</p>
+      <form id="analysisPopupForm">
+        <div class="form-grid">
+          <div class="form-group full">
+            <label>客户分析 *</label>
+            <textarea id="popupCustomerAnalysis" rows="3" placeholder="分析客户痛点、需求、决策链等..." style="width:100%;padding:8px 12px;border:1px solid var(--navy-200);border-radius:var(--radius-sm);font-size:.85rem;font-family:var(--font-sans);resize:vertical;box-sizing:border-box;"></textarea>
+          </div>
+          <div class="form-group full">
+            <label>成交可能性分析 *</label>
+            <textarea id="popupDealProbability" rows="3" placeholder="评估成交可能性、时间预期、风险因素等..." style="width:100%;padding:8px 12px;border:1px solid var(--navy-200);border-radius:var(--radius-sm);font-size:.85rem;font-family:var(--font-sans);resize:vertical;box-sizing:border-box;"></textarea>
+          </div>
+          <div class="form-group full">
+            <div class="login-error" id="analysisPopupError"></div>
+          </div>
+          <div class="form-group full">
+            <button type="submit" class="btn btn-primary" style="width:100%;">确认推进</button>
+          </div>
+        </div>
+      </form>
     </div>
   </div>
 </div>
@@ -2398,6 +2430,27 @@ async function addActivity(text, stage) {
 // Kanban 看板
 // ============================================
 var dragSrc = null;
+var dragPending = null;
+
+function doStageUpdate(c, stage) {
+  c.stage = stage;
+  c.updatedAt = new Date().toISOString();
+  api('POST', '/api/customers', c).then(function() {
+    return api('POST', '/api/activities', {
+      text: getUserName(c.assignedTo || c.createdBy) + ' \u5C06 ' + c.companyName + ' \u79FB\u81F3' + getStageLabel(stage),
+      stage: stage
+    });
+  }).then(function() {
+    return api('GET', '/api/activities');
+  }).then(function(acts) {
+    AppState.activities = acts;
+    renderKanban();
+    if (document.getElementById('page-dashboard').classList.contains('active')) renderDashboard();
+    toast('\u5DF2\u79FB\u81F3\u300C' + getStageLabel(stage) + '\u300D');
+  }).catch(function(err) {
+    toast('\u66F4\u65B0\u5931\u8D25: ' + err.message, 'error');
+  });
+}
 
 function renderKanban() {
   const customers = getFilteredCustomers();
@@ -2483,24 +2536,18 @@ function setupDragDrop() {
       var stage = col.dataset.stage;
       var c = AppState.customers.find(function(c) { return c.id === dragSrc; });
       if (c && c.stage !== stage) {
-        c.stage = stage;
-        c.updatedAt = new Date().toISOString();
-        // 通过 API 更新
-        api('POST', '/api/customers', c).then(function() {
-          return api('POST', '/api/activities', {
-            text: getUserName(c.assignedTo || c.createdBy) + ' \u5C06 ' + c.companyName + ' \u79FB\u81F3' + getStageLabel(stage),
-            stage: stage
-          });
-        }).then(function() {
-          return api('GET', '/api/activities');
-        }).then(function(acts) {
-          AppState.activities = acts;
-          renderKanban();
-          if (document.getElementById('page-dashboard').classList.contains('active')) renderDashboard();
-          toast('\u5DF2\u79FB\u81F3\u300C' + getStageLabel(stage) + '\u300D');
-        }).catch(function(err) {
-          toast('\u66F4\u65B0\u5931\u8D25: ' + err.message, 'error');
-        });
+        // 首次回复 → 需求分析：弹出分析填写窗口
+        if (c.stage === 'first_reply' && stage === 'needs_analysis') {
+          dragPending = { customer: c, stage: stage };
+          document.getElementById('popupCustomerAnalysis').value = '';
+          document.getElementById('popupDealProbability').value = '';
+          document.getElementById('analysisPopupError').textContent = '';
+          document.getElementById('analysisPopupModal').classList.add('active');
+          dragSrc = null;
+          return;
+        }
+        // 其他阶段直接更新
+        doStageUpdate(c, stage);
       }
       dragSrc = null;
     });
@@ -3032,6 +3079,31 @@ document.addEventListener('DOMContentLoaded', async function() {
   // 下钻弹窗关闭
   document.getElementById('dashDrillCloseBtn').addEventListener('click', closeDashDrill);
   document.getElementById('dashDrillCloseModalBtn').addEventListener('click', closeDashDrill);
+
+  // 拖拽到需求分析弹出 - 提交分析
+  document.getElementById('analysisPopupForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    if (!dragPending) return;
+    var analysis = document.getElementById('popupCustomerAnalysis').value.trim();
+    var prob = document.getElementById('popupDealProbability').value.trim();
+    var errEl = document.getElementById('analysisPopupError');
+    if (!analysis) { errEl.textContent = '请填写客户分析'; return; }
+    if (!prob) { errEl.textContent = '请填写成交可能性分析'; return; }
+    errEl.textContent = '';
+    var c = dragPending.customer;
+    c.customerAnalysis = analysis;
+    c.dealProbability = prob;
+    document.getElementById('analysisPopupModal').classList.remove('active');
+    dragPending = null;
+    doStageUpdate(c, 'needs_analysis');
+  });
+  // 点击遮罩关闭弹窗
+  document.getElementById('analysisPopupModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+      this.classList.remove('active');
+      dragPending = null;
+    }
+  });
 
   document.getElementById('addCustomerBtn').addEventListener('click', openAddModal);
 
