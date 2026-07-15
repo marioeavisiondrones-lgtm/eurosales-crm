@@ -1764,12 +1764,12 @@ Modal - 账号管理 (新增/编辑)
 Modal - 仪表盘下钻列表
 ============================================ -->
 <div class="modal-overlay" id="dashDrillModal">
-  <div class="modal" style="max-width:600px;">
+  <div class="modal" style="max-width:920px;">
     <div class="modal-header">
       <h3 id="dashDrillTitle">客户列表</h3>
       <button class="modal-close" id="dashDrillCloseBtn">&times;</button>
     </div>
-    <div class="modal-body" style="max-height:420px;overflow-y:auto;padding:16px 24px;">
+    <div class="modal-body" style="max-height:440px;overflow-y:auto;padding:16px 24px;">
       <div id="dashDrillList"></div>
     </div>
     <div class="modal-footer">
@@ -2422,19 +2422,31 @@ function openDashDrill(type) {
     return;
   }
 
-  var html = '<table class="list-table" style="font-size:.82rem;"><thead><tr><th>\u516C\u53F8</th><th>\u8054\u7CFB\u4EBA</th><th>\u9636\u6BB5</th><th>\u5E74\u6846</th><th>\u8D1F\u8D23\u4EBA</th></tr></thead><tbody>';
+  var html = '<table class="list-table" style="font-size:.8rem;width:100%;"><thead><tr><th>\u516C\u53F8</th><th>\u8054\u7CFB\u4EBA</th><th>\u7535\u8BDD</th><th>\u90AE\u7BB1</th><th>\u56FD\u5BB6</th><th>\u9636\u6BB5</th><th>\u5E74\u6846</th><th>\u9996\u63D0</th><th>\u9884\u8BA1\u6210\u4EA4</th><th>\u8D1F\u8D23\u4EBA</th></tr></thead><tbody>';
   list.forEach(function(c) {
     var u = getUserName(c.assignedTo || c.createdBy);
-    html += '<tr>' +
-      '<td>' + (c.companyName || '') + '</td>' +
+    html += '<tr class="dash-drill-row" data-id="' + c.id + '" style="cursor:pointer;">' +
+      '<td class="company-cell">' + (c.companyName || '') + '</td>' +
       '<td>' + (c.contactName || '') + '</td>' +
+      '<td>' + (c.phone || '\u2014') + '</td>' +
+      '<td>' + (c.email || '\u2014') + '</td>' +
+      '<td>' + (c.country || '\u2014') + '</td>' +
       '<td><span class="stage-badge ' + getStageBadgeClass(c.stage) + '">' + getStageIcon(c.stage) + ' ' + getStageLabel(c.stage) + '</span></td>' +
       '<td>' + ((c.annualQty || 0) > 0 ? c.annualQty + ' \u53F0' : '\u2014') + '</td>' +
+      '<td>' + ((c.firstQty || 0) > 0 ? c.firstQty + ' \u53F0' : '\u2014') + '</td>' +
+      '<td>' + (c.estimatedCloseDate || '\u2014') + '</td>' +
       '<td>' + u + '</td>' +
     '</tr>';
   });
   html += '</tbody></table>';
   container.innerHTML = html;
+  // 点击行查看详情
+  container.querySelectorAll('.dash-drill-row').forEach(function(row) {
+    row.addEventListener('click', function() {
+      closeDashDrill();
+      showDetail(this.dataset.id);
+    });
+  });
   document.getElementById('dashDrillModal').classList.add('active');
 }
 
