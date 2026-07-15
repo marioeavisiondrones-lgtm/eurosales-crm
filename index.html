@@ -2358,7 +2358,7 @@ function renderCooperation() {
     var u = getUserName(c.assignedTo || c.createdBy);
     var qty = Number(c.annualQty) || 0;
     var rateClass = qty >= 100 ? 'high' : qty >= 30 ? 'mid' : 'low';
-    html += '<tr>' +
+    html += '<tr class="coop-row" data-id="' + c.id + '" style="cursor:pointer;">' +
       '<td class="company-cell">' + (c.companyName || '') + '</td>' +
       '<td>' + (c.contactName || '') + '</td>' +
       '<td>' + formatDateShort(c.updatedAt || c.createdAt) + '</td>' +
@@ -2371,6 +2371,12 @@ function renderCooperation() {
   });
   html += '</tbody></table>';
   wrap.innerHTML = html;
+  // 点击行查看详情
+  wrap.querySelectorAll('.coop-row').forEach(function(row) {
+    row.addEventListener('click', function() {
+      showDetail(this.dataset.id);
+    });
+  });
 }
 
 // ============================================
