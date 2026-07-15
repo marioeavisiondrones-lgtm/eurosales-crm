@@ -1534,6 +1534,10 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
           <div class="filters">
             <select class="filter-select" id="listSalesFilter"><option value="all">全部销售</option></select>
             <select class="filter-select" id="listStageFilter"><option value="all">全部阶段</option></select>
+            <div style="position:relative;display:inline-block;">
+              <input type="text" id="listSearchInput" placeholder="&#x1F50D; 搜索公司名/邮箱..." style="width:180px;padding:6px 10px 6px 30px;border:1px solid var(--navy-200);border-radius:var(--radius-sm);font-size:.78rem;font-family:var(--font-sans);outline:none;transition:border-color .15s;">
+              <span style="position:absolute;left:8px;top:50%;transform:translateY(-50%);font-size:.78rem;color:var(--navy-400);">&#x1F50D;</span>
+            </div>
           </div>
           <span style="font-size:.82rem;color:var(--navy-400);">共 <strong id="listCount">0</strong> 条客户</span>
         </div>
@@ -2867,6 +2871,14 @@ function renderList() {
   if (sf !== 'all') customers = customers.filter(function(c) { return c.assignedTo === parseInt(sf) || c.createdBy === parseInt(sf); });
   var stf = document.getElementById('listStageFilter').value;
   if (stf !== 'all') customers = customers.filter(function(c) { return c.stage === stf; });
+  var sq = document.getElementById('listSearchInput').value.trim().toLowerCase();
+  if (sq) {
+    customers = customers.filter(function(c) {
+      return (c.companyName && c.companyName.toLowerCase().indexOf(sq) >= 0) ||
+             (c.email && c.email.toLowerCase().indexOf(sq) >= 0) ||
+             (c.contactName && c.contactName.toLowerCase().indexOf(sq) >= 0);
+    });
+  }
   document.getElementById('listCount').textContent = customers.length;
   var wrap = document.getElementById('listTableWrap');
   if (!customers.length) {
@@ -3344,6 +3356,7 @@ async function initApp() {
   });
   document.getElementById('kanbanDateFilter').onchange = renderKanban;
   sf3.onchange = renderList;
+  document.getElementById('listSearchInput').oninput = renderList;
 }
 
 // ============================================
