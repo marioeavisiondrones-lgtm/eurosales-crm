@@ -1639,6 +1639,37 @@ Modal - 新增/编辑客户
             <label>公司网站或社媒链接 *</label>
             <input type="url" id="fSocial" required placeholder="https://www.linkedin.com/company/...">
           </div>
+          <div class="form-group" style="align-self:flex-end;">
+            <button type="button" class="btn btn-ghost btn-sm" id="toggleMoreContacts" style="font-size:.78rem;padding:6px 12px;color:var(--accent-500);">
+              + 添加其他联系人
+            </button>
+          </div>
+          <!-- 其他联系人 2 -->
+          <div class="form-group more-contact" style="display:none;">
+            <label>联系人2 姓名</label>
+            <input type="text" id="fContact2Name" placeholder="姓名">
+          </div>
+          <div class="form-group more-contact" style="display:none;">
+            <label>联系人2 电话</label>
+            <input type="text" id="fContact2Phone" placeholder="电话">
+          </div>
+          <div class="form-group more-contact" style="display:none;">
+            <label>联系人2 邮箱</label>
+            <input type="email" id="fContact2Email" placeholder="邮箱">
+          </div>
+          <!-- 其他联系人 3 -->
+          <div class="form-group more-contact" style="display:none;">
+            <label>联系人3 姓名</label>
+            <input type="text" id="fContact3Name" placeholder="姓名">
+          </div>
+          <div class="form-group more-contact" style="display:none;">
+            <label>联系人3 电话</label>
+            <input type="text" id="fContact3Phone" placeholder="电话">
+          </div>
+          <div class="form-group more-contact" style="display:none;">
+            <label>联系人3 邮箱</label>
+            <input type="email" id="fContact3Email" placeholder="邮箱">
+          </div>
           <div class="form-group">
             <label>所在国家</label>
             <div class="country-selector" id="countrySelector">
@@ -1814,6 +1845,10 @@ Modal - 仪表盘下钻列表
       <button class="modal-close" id="dashDrillCloseBtn">&times;</button>
     </div>
     <div class="modal-body" style="max-height:440px;overflow-y:auto;padding:16px 24px;">
+      <div class="dash-drill-search" style="margin-bottom:10px;position:relative;">
+        <input type="text" id="dashDrillSearch" placeholder="&#x1F50D; 搜索公司名或邮箱..." style="width:100%;padding:8px 12px 8px 36px;border:1px solid var(--navy-200);border-radius:var(--radius-sm);font-size:.82rem;font-family:var(--font-sans);box-sizing:border-box;outline:none;transition:border-color .15s;">
+        <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:.85rem;color:var(--navy-400);">&#x1F50D;</span>
+      </div>
       <div id="dashDrillList"></div>
     </div>
     <div class="modal-footer">
@@ -2518,31 +2553,52 @@ function openDashDrill(type) {
     return;
   }
 
-  var html = '<table class="list-table" style="font-size:.8rem;width:100%;"><thead><tr><th>\u516C\u53F8</th><th>\u8054\u7CFB\u4EBA</th><th>\u7535\u8BDD</th><th>\u90AE\u7BB1</th><th>\u56FD\u5BB6</th><th>\u9636\u6BB5</th><th>\u5E74\u6846</th><th>\u9996\u63D0</th><th>\u9884\u8BA1\u6210\u4EA4</th><th>\u8D1F\u8D23\u4EBA</th></tr></thead><tbody>';
-  list.forEach(function(c) {
-    var u = getUserName(c.assignedTo || c.createdBy);
-    html += '<tr class="dash-drill-row" data-id="' + c.id + '" style="cursor:pointer;">' +
-      '<td class="company-cell">' + (c.companyName || '') + '</td>' +
-      '<td>' + (c.contactName || '') + '</td>' +
-      '<td>' + (c.phone || '\u2014') + '</td>' +
-      '<td>' + (c.email || '\u2014') + '</td>' +
-      '<td>' + (c.country || '\u2014') + '</td>' +
-      '<td><span class="stage-badge ' + getStageBadgeClass(c.stage) + '">' + getStageIcon(c.stage) + ' ' + getStageLabel(c.stage) + '</span></td>' +
-      '<td>' + ((c.annualQty || 0) > 0 ? c.annualQty + ' \u53F0' : '\u2014') + '</td>' +
-      '<td>' + ((c.firstQty || 0) > 0 ? c.firstQty + ' \u53F0' : '\u2014') + '</td>' +
-      '<td>' + (c.estimatedCloseDate || '\u2014') + '</td>' +
-      '<td>' + u + '</td>' +
-    '</tr>';
-  });
-  html += '</tbody></table>';
-  container.innerHTML = html;
-  // 点击行查看详情
-  container.querySelectorAll('.dash-drill-row').forEach(function(row) {
-    row.addEventListener('click', function() {
-      closeDashDrill();
-      showDetail(this.dataset.id);
+  // 渲染下钻表格
+  function renderDrillTable(data) {
+    var html = '<table class="list-table" style="font-size:.8rem;width:100%;"><thead><tr><th>\u516C\u53F8</th><th>\u8054\u7CFB\u4EBA</th><th>\u7535\u8BDD</th><th>\u90AE\u7BB1</th><th>\u56FD\u5BB6</th><th>\u9636\u6BB5</th><th>\u5E74\u6846</th><th>\u9996\u63D0</th><th>\u9884\u8BA1\u6210\u4EA4</th><th>\u8D1F\u8D23\u4EBA</th></tr></thead><tbody>';
+    data.forEach(function(c) {
+      var u = getUserName(c.assignedTo || c.createdBy);
+      // 拼接所有联系人信息用于搜索
+      var contacts = [c.contactName, c.contact2Name, c.contact3Name].filter(Boolean).join(', ');
+      html += '<tr class="dash-drill-row" data-id="' + c.id + '" style="cursor:pointer;">' +
+        '<td class="company-cell">' + (c.companyName || '') + '</td>' +
+        '<td>' + contacts + '</td>' +
+        '<td>' + (c.phone || '\u2014') + '</td>' +
+        '<td>' + (c.email || '\u2014') + '</td>' +
+        '<td>' + (c.country || '\u2014') + '</td>' +
+        '<td><span class="stage-badge ' + getStageBadgeClass(c.stage) + '">' + getStageIcon(c.stage) + ' ' + getStageLabel(c.stage) + '</span></td>' +
+        '<td>' + ((c.annualQty || 0) > 0 ? c.annualQty + ' \u53F0' : '\u2014') + '</td>' +
+        '<td>' + ((c.firstQty || 0) > 0 ? c.firstQty + ' \u53F0' : '\u2014') + '</td>' +
+        '<td>' + (c.estimatedCloseDate || '\u2014') + '</td>' +
+        '<td>' + u + '</td>' +
+      '</tr>';
     });
-  });
+    html += '</tbody></table>';
+    container.innerHTML = html;
+    container.querySelectorAll('.dash-drill-row').forEach(function(row) {
+      row.addEventListener('click', function() {
+        closeDashDrill();
+        showDetail(this.dataset.id);
+      });
+    });
+  }
+
+  renderDrillTable(list);
+
+  // 搜索过滤
+  var searchInput = document.getElementById('dashDrillSearch');
+  searchInput.value = '';
+  searchInput.oninput = function() {
+    var q = this.value.trim().toLowerCase();
+    if (!q) { renderDrillTable(list); return; }
+    var filtered = list.filter(function(c) {
+      return (c.companyName && c.companyName.toLowerCase().indexOf(q) >= 0) ||
+             (c.email && c.email.toLowerCase().indexOf(q) >= 0) ||
+             (c.contactName && c.contactName.toLowerCase().indexOf(q) >= 0);
+    });
+    renderDrillTable(filtered);
+  };
+
   document.getElementById('dashDrillModal').classList.add('active');
 }
 
@@ -2819,9 +2875,10 @@ function renderList() {
   }
   var html = '<table class="list-table"><thead><tr><th>\u516C\u53F8</th><th>\u8054\u7CFB\u4EBA</th><th>\u9636\u6BB5</th><th>\u5E74\u6846</th><th>\u5361\u70B9</th><th>\u8D1F\u8D23\u4EBA</th><th>\u5F55\u5165\u65F6\u95F4</th><th>\u64CD\u4F5C</th></tr></thead><tbody>';
   customers.sort(function(a,b) { return new Date(b.createdAt) - new Date(a.createdAt); }).forEach(function(c) {
+    var contacts = [c.contactName, c.contact2Name, c.contact3Name].filter(Boolean).join(', ');
     html += '<tr data-id="' + c.id + '">' +
       '<td class="company-cell">' + (c.companyName || '') + '</td>' +
-      '<td>' + (c.contactName || '') + '</td>' +
+      '<td>' + contacts + '</td>' +
       '<td><span class="stage-badge ' + getStageBadgeClass(c.stage) + '">' + getStageIcon(c.stage) + ' ' + getStageLabel(c.stage) + '</span></td>' +
       '<td>' + ((c.annualQty || 0) > 0 ? c.annualQty + ' \u53F0' : '\u2014') + '</td>' +
       '<td>' + (c.blocker ? '\u26A0\uFE0F \u6709\u5361\u70B9' : '\u2014') + '</td>' +
@@ -2868,6 +2925,16 @@ function openAddModal() {
   document.getElementById('fCustomerAnalysis').value = '';
   document.getElementById('fDealProbability').value = '';
   document.getElementById('fStopReason').value = '';
+  document.getElementById('fContact2Name').value = '';
+  document.getElementById('fContact2Phone').value = '';
+  document.getElementById('fContact2Email').value = '';
+  document.getElementById('fContact3Name').value = '';
+  document.getElementById('fContact3Phone').value = '';
+  document.getElementById('fContact3Email').value = '';
+  // 收起其他联系人
+  window.moreContactsShown = false;
+  document.querySelectorAll('.more-contact').forEach(function(el) { el.style.display = 'none'; });
+  document.getElementById('toggleMoreContacts').textContent = '+ 添加其他联系人';
   document.getElementById('analysisFieldCustomer').style.display = 'none';
   document.getElementById('analysisFieldProb').style.display = 'none';
   document.getElementById('signedFieldShipped').style.display = 'none';
@@ -2884,6 +2951,18 @@ function openEditModal(id) {
   document.getElementById('fContact').value = c.contactName || '';
   document.getElementById('fPhone').value = c.phone || '';
   document.getElementById('fEmail').value = c.email || '';
+  document.getElementById('fContact2Name').value = c.contact2Name || '';
+  document.getElementById('fContact2Phone').value = c.contact2Phone || '';
+  document.getElementById('fContact2Email').value = c.contact2Email || '';
+  document.getElementById('fContact3Name').value = c.contact3Name || '';
+  document.getElementById('fContact3Phone').value = c.contact3Phone || '';
+  document.getElementById('fContact3Email').value = c.contact3Email || '';
+  // 编辑时如果有其他联系人，自动展开
+  if (c.contact2Name || c.contact3Name) {
+    window.moreContactsShown = true;
+    document.querySelectorAll('.more-contact').forEach(function(el) { el.style.display = ''; });
+    document.getElementById('toggleMoreContacts').textContent = '- 收起其他联系人';
+  }
   document.getElementById('fCountry').value = c.country || '';
   document.getElementById('fCountrySearch').value = c.country || '';
   selectedCountry = c.country || '';
@@ -2923,6 +3002,12 @@ async function saveCustomer() {
     contactName: document.getElementById('fContact').value.trim(),
     phone: document.getElementById('fPhone').value.trim(),
     email: document.getElementById('fEmail').value.trim(),
+    contact2Name: document.getElementById('fContact2Name').value.trim(),
+    contact2Phone: document.getElementById('fContact2Phone').value.trim(),
+    contact2Email: document.getElementById('fContact2Email').value.trim(),
+    contact3Name: document.getElementById('fContact3Name').value.trim(),
+    contact3Phone: document.getElementById('fContact3Phone').value.trim(),
+    contact3Email: document.getElementById('fContact3Email').value.trim(),
     socialLink: document.getElementById('fSocial').value.trim(),
     country: document.getElementById('fCountry').value,
     stage: document.getElementById('fStage').value,
@@ -2995,6 +3080,8 @@ function showDetail(id) {
   grid.innerHTML =
     '<div class="detail-item"><div class="label">\u8054\u7CFB\u4EBA</div><div class="value">' + (c.contactName || '--') + '</div></div>' +
     '<div class="detail-item"><div class="label">\u8054\u7CFB\u65B9\u5F0F</div><div class="value">' + (c.phone || '--') + (c.email ? ' \u00B7 ' + c.email : '') + '</div></div>' +
+    (c.contact2Name ? '<div class="detail-item"><div class="label">\u8054\u7CFB\u4EBA2</div><div class="value">' + c.contact2Name + (c.contact2Phone ? ' \u00B7 ' + c.contact2Phone : '') + (c.contact2Email ? ' \u00B7 ' + c.contact2Email : '') + '</div></div>' : '') +
+    (c.contact3Name ? '<div class="detail-item"><div class="label">\u8054\u7CFB\u4EBA3</div><div class="value">' + c.contact3Name + (c.contact3Phone ? ' \u00B7 ' + c.contact3Phone : '') + (c.contact3Email ? ' \u00B7 ' + c.contact3Email : '') + '</div></div>' : '') +
     '<div class="detail-item"><div class="label">\u7F51\u7AD9/\u793E\u5A92</div><div class="value">' + (c.socialLink ? '<a href="' + c.socialLink + '" target="_blank" rel="noopener" style="color:var(--accent-500)">\u67E5\u770B\u94FE\u63A5</a>' : '--') + '</div></div>' +
     '<div class="detail-item"><div class="label">\u56FD\u5BB6</div><div class="value">' + (c.country || '--') + '</div></div>' +
     '<div class="detail-item"><div class="label">\u5BA2\u6237\u9636\u6BB5</div><div class="value"><span class="stage-badge ' + getStageBadgeClass(c.stage) + '">' + getStageIcon(c.stage) + ' ' + getStageLabel(c.stage) + '</span></div></div>' +
@@ -3389,6 +3476,16 @@ document.addEventListener('DOMContentLoaded', async function() {
     document.getElementById('analysisFieldProb').style.display = showAnalysis ? '' : 'none';
     // 停止原因字段：仅停止跟进阶段显示
     document.getElementById('stopReasonField').style.display = this.value === 'stopped' ? '' : 'none';
+  });
+
+  // 其他联系人展开/折叠
+  window.moreContactsShown = false;
+  document.getElementById('toggleMoreContacts').addEventListener('click', function() {
+    window.moreContactsShown = !window.moreContactsShown;
+    document.querySelectorAll('.more-contact').forEach(function(el) {
+      el.style.display = window.moreContactsShown ? '' : 'none';
+    });
+    this.textContent = window.moreContactsShown ? '- 收起其他联系人' : '+ 添加其他联系人';
   });
 
   // 仪表盘下钻 - 点击统计卡片
