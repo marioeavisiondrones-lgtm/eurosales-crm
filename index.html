@@ -1676,7 +1676,37 @@ Modal - 客户详情
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost btn-sm" id="detailEditBtn">&#x270F;&#xFE0F; 编辑</button>
+      <button class="btn btn-ghost btn-sm" id="detailReassignBtn" style="display:none;">&#x1F91D; 分配</button>
       <button class="btn btn-primary btn-sm" id="detailCloseModalBtn">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================
+Modal - 管理员分配客户
+============================================ -->
+<div class="modal-overlay" id="reassignModal">
+  <div class="modal" style="max-width:400px;">
+    <div class="modal-header">
+      <h3>&#x1F91D; 分配客户</h3>
+      <button class="modal-close" id="reassignCloseBtn">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p style="color:var(--navy-400);margin-bottom:16px;font-size:.85rem;">选择需要接收此客户的销售，该客户将自动转移给所选销售。</p>
+      <form id="reassignForm">
+        <div class="form-grid">
+          <div class="form-group full">
+            <label>目标销售</label>
+            <select id="reassignTarget" style="width:100%;padding:8px 12px;border:1px solid var(--navy-200);border-radius:var(--radius-sm);font-size:.85rem;font-family:var(--font-sans);"></select>
+          </div>
+          <div class="form-group full">
+            <div class="login-error" id="reassignError"></div>
+          </div>
+          <div class="form-group full">
+            <button type="submit" class="btn btn-primary" style="width:100%;">确认分配</button>
+          </div>
+        </div>
+      </form>
     </div>
   </div>
 </div>
@@ -2756,7 +2786,62 @@ function showDetail(id) {
     '<div class="detail-item"><div class="label">\u8D1F\u8D23\u4EBA</div><div class="value">' + u + '</div></div>' +
     '<div class="detail-item"><div class="label">\u5F55\u5165\u65F6\u95F4</div><div class="value">' + formatDateShort(c.createdAt) + '</div></div>';
   document.getElementById('detailEditBtn').onclick = function() { closeModal(); openEditModal(id); };
+  // 管理员显示分配按钮
+  var reassignBtn = document.getElementById('detailReassignBtn');
+  if (AppState.currentUser.role === 'manager') {
+    reassignBtn.style.display = '';
+    reassignBtn.onclick = function() { openReassignModal(id); };
+  } else {
+    reassignBtn.style.display = 'none';
+  }
   document.getElementById('detailModal').classList.add('active');
+}
+
+// ============================================
+// 管理员分配客户
+// ============================================
+function openReassignModal(id) {
+  var select = document.getElementById('reassignTarget');
+  select.innerHTML = '';
+  AppState.users.forEach(function(u) {
+    if (u.role === 'sales') {
+      var opt = document.createElement('option');
+      opt.value = u.id;
+      opt.textContent = u.name + ' (' + u.username + ')';
+      select.appendChild(opt);
+    }
+  });
+  document.getElementById('reassignError').textContent = '';
+  document.getElementById('reassignModal').dataset.customerId = id;
+  document.getElementById('reassignModal').classList.add('active');
+}
+
+function closeReassignModal() {
+  document.getElementById('reassignModal').classList.remove('active');
+}
+
+async function doReassignCustomer(e) {
+  e.preventDefault();
+  var modal = document.getElementById('reassignModal');
+  var customerId = modal.dataset.customerId;
+  var targetUserId = parseInt(document.getElementById('reassignTarget').value);
+  var errEl = document.getElementById('reassignError');
+  if (!targetUserId) { errEl.textContent = '请选择目标销售'; return; }
+  errEl.textContent = '';
+  try {
+    var c = AppState.customers.find(function(c) { return c.id === customerId; });
+    if (!c) { errEl.textContent = '客户不存在'; return; }
+    var targetUser = AppState.users.find(function(u) { return u.id === targetUserId; });
+    c.assignedTo = targetUserId;
+    await api('POST', '/api/customers', c);
+    await addActivity(AppState.currentUser.name + ' \u5C06 ' + c.companyName + ' \u5206\u914D\u7ED9 ' + targetUser.name, c.stage);
+    toast('\u5BA2\u6237\u5DF2\u6210\u529F\u5206\u914D\u7ED9 ' + targetUser.name);
+    closeReassignModal();
+    closeModal();
+    refreshAll();
+  } catch (e) {
+    errEl.textContent = '分配失败: ' + e.message;
+  }
 }
 
 // ============================================
@@ -3113,6 +3198,12 @@ document.addEventListener('DOMContentLoaded', async function() {
   document.getElementById('modalSaveBtn').addEventListener('click', saveCustomer);
   document.getElementById('detailCloseBtn').addEventListener('click', closeModal);
   document.getElementById('detailCloseModalBtn').addEventListener('click', closeModal);
+  // 分配客户
+  document.getElementById('reassignForm').addEventListener('submit', doReassignCustomer);
+  document.getElementById('reassignCloseBtn').addEventListener('click', closeReassignModal);
+  document.getElementById('reassignModal').addEventListener('click', function(e) {
+    if (e.target === this) closeReassignModal();
+  });
 
   // 销售管理 Modal
   document.getElementById('addSalesBtn').addEventListener('click', openAddSalesModal);
