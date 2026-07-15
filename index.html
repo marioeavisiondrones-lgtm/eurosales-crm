@@ -1433,7 +1433,7 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
           <div class="stat-card clickable" data-dash="orders">
             <div class="stat-icon emerald">&#x1F4B0;</div>
             <div class="label">预计订单数量</div>
-            <div class="value" id="statBudget">0 单</div>
+            <div class="value" id="statBudget">0 台</div>
             <div class="sub">进行中按首提(筛选时间) + 已签约按本季度计划</div>
           </div>
         </div>
@@ -2392,7 +2392,7 @@ function renderDashboard() {
   document.getElementById('statLongTerm').textContent = longTerm;
   var stopped = customers.filter(function(c) { return c.stage === 'stopped'; }).length;
   document.getElementById('statStopped').textContent = stopped;
-  document.getElementById('statBudget').textContent = orderQty + ' \u5355';
+  document.getElementById('statBudget').textContent = orderQty + ' \u53F0';
   renderFunnel(customers);
   renderActivities();
 }
