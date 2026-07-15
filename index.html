@@ -1434,7 +1434,7 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
             <div class="stat-icon emerald">&#x1F4B0;</div>
             <div class="label">预计订单数量</div>
             <div class="value" id="statBudget">0 单</div>
-            <div class="sub">按计划成交时间统计</div>
+            <div class="sub">进行中按首提(筛选时间) + 已签约按本季度计划</div>
           </div>
         </div>
         <div class="dashboard-grid" id="statCardsSecond" style="margin-top:12px;grid-template-columns:repeat(2,1fr);">
@@ -2361,11 +2361,17 @@ function renderDashboard() {
   var customers = filterByDate(getVisibleCustomers(), df.from, df.to);
   const total = customers.length;
   const active = customers.filter(function(c) { return ACTIVE_STAGES.includes(c.stage); }).length;
-  // 预计订单数量：进行中客户按首提数量（有预计成交时间） + 已签约客户本季度计划出货数量
+  // 预计订单数量：进行中客户按首提数量（预计成交时间在筛选范围内）+ 已签约客户本季度计划出货数量
   var orderQty = 0;
-  // 进行中客户：按首提数量，有预计成交时间
+  // 进行中客户：按首提数量，预计成交时间在筛选范围内
   orderQty += customers.filter(function(c) {
-    return ACTIVE_STAGES.includes(c.stage) && c.estimatedCloseDate;
+    if (!ACTIVE_STAGES.includes(c.stage) || !c.estimatedCloseDate) return false;
+    var closeDate = new Date(c.estimatedCloseDate).getTime();
+    if (!closeDate) return false;
+    // 如果设置了筛选范围，用预计成交时间判断
+    if (df.from && closeDate < df.from.getTime()) return false;
+    if (df.to && closeDate > df.to.getTime()) return false;
+    return true;
   }).reduce(function(s, c) { return s + (Number(c.firstQty) || 0); }, 0);
   // 已签约客户：本季度计划出货数量
   var qStart = new Date(); qStart.setMonth(Math.floor(qStart.getMonth()/3)*3, 1); qStart.setHours(0,0,0,0);
@@ -2480,8 +2486,15 @@ function openDashDrill(type) {
     list = customers.filter(function(c) { return ACTIVE_STAGES.includes(c.stage); });
     title = '\u8FDB\u884C\u4E2D\u5BA2\u6237 (' + list.length + ')';
   } else if (type === 'orders') {
-    // 进行中客户（有预计成交时间，首提数量>0）+ 已签约客户（本季度计划出货>0）
-    var part1 = customers.filter(function(c) { return ACTIVE_STAGES.includes(c.stage) && c.estimatedCloseDate; });
+    // 进行中客户（预计成交时间在筛选范围内，首提数量>0）+ 已签约客户（本季度计划出货>0）
+    var part1 = customers.filter(function(c) {
+      if (!ACTIVE_STAGES.includes(c.stage) || !c.estimatedCloseDate) return false;
+      var closeDate = new Date(c.estimatedCloseDate).getTime();
+      if (!closeDate) return false;
+      if (df.from && closeDate < df.from.getTime()) return false;
+      if (df.to && closeDate > df.to.getTime()) return false;
+      return true;
+    });
     var part2 = customers.filter(function(c) { return c.stage === 'signed' && (c.quarterlyPlanQty || 0) > 0; });
     // 合并去重
     var ids = {};
@@ -2489,7 +2502,7 @@ function openDashDrill(type) {
     part2.forEach(function(c) { ids[c.id] = true; });
     list = [];
     customers.forEach(function(c) { if (ids[c.id]) list.push(c); });
-    title = '\u9884\u8BA1\u4EA7\u751F\u8BA2\u5355\u7684\u5BA2\u6237 (' + list.length + ')';
+    title = '\u9884\u8BA1\u8BA2\u5355\u5BA2\u6237 (' + list.length + ')';
   } else if (type === 'medium') {
     list = customers.filter(function(c) { return c.stage === 'needs_analysis' || c.stage === 'price_negotiation'; });
     title = '\u4E2D\u610F\u5411\u5BA2\u6237 (' + list.length + ')';
