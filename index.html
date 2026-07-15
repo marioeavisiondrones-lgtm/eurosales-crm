@@ -662,10 +662,15 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
 .filter-select:focus { border-color: var(--accent-500); }
 .kanban-board {
   display: flex;
-  gap: 14px;
-  overflow-x: auto;
+  flex-direction: column;
+  gap: 0;
   padding-bottom: 12px;
   min-height: calc(100vh - 200px);
+}
+.kanban-row {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
   align-items: flex-start;
 }
 .kanban-col {
@@ -2593,10 +2598,11 @@ function rejectCustomer(id) {
 function renderKanban() {
   const customers = getFilteredCustomers();
   const board = document.getElementById('kanbanBoard');
-  var html = '';
-  STAGES.forEach(function(s) {
+  // 第一行：主要阶段
+  var firstRow = '';
+  STAGES.filter(function(s) { return s.id !== 'long_term' && s.id !== 'stopped'; }).forEach(function(s) {
     const cards = customers.filter(function(c) { return c.stage === s.id; });
-    html +=
+    firstRow +=
       '<div class="kanban-col" data-stage="' + s.id + '">' +
         '<div class="kanban-col-header">' +
           '<span class="col-title">' + s.icon + ' ' + s.label + '</span>' +
@@ -2607,7 +2613,22 @@ function renderKanban() {
         '</div>' +
       '</div>';
   });
-  board.innerHTML = html;
+  // 第二行：长期跟进 + 停止跟进
+  var secondRow = '';
+  STAGES.filter(function(s) { return s.id === 'long_term' || s.id === 'stopped'; }).forEach(function(s) {
+    const cards = customers.filter(function(c) { return c.stage === s.id; });
+    secondRow +=
+      '<div class="kanban-col" data-stage="' + s.id + '">' +
+        '<div class="kanban-col-header">' +
+          '<span class="col-title">' + s.icon + ' ' + s.label + '</span>' +
+          '<span class="col-count">' + cards.length + '</span>' +
+        '</div>' +
+        '<div class="kanban-col-body" data-stage="' + s.id + '">' +
+          (cards.length ? cards.map(function(c) { return renderKanbanCard(c); }).join('') : '<div class="empty-col">\u6682\u65E0\u5BA2\u6237</div>') +
+        '</div>' +
+      '</div>';
+  });
+  board.innerHTML = '<div class="kanban-row">' + firstRow + '</div><div class="kanban-row" style="margin-top:16px;">' + secondRow + '</div>';
   document.getElementById('kanbanBadge').textContent = customers.length;
   document.getElementById('listBadge').textContent = getVisibleCustomers().length;
   // 更新待审核角标
