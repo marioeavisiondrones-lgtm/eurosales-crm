@@ -1412,12 +1412,6 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
             <div class="value" id="statTotal">0</div>
             <div class="sub">全部意向客户</div>
           </div>
-          <div class="stat-card clickable" data-dash="active">
-            <div class="stat-icon amber">&#x1F504;</div>
-            <div class="label">进行中</div>
-            <div class="value" id="statActive">0</div>
-            <div class="sub">未签约也非流失</div>
-          </div>
           <div class="stat-card clickable" data-dash="medium">
             <div class="stat-icon" style="background:#fef3c7;color:#d97706;">&#x1F4AD;</div>
             <div class="label">中意向客户</div>
@@ -2360,7 +2354,6 @@ function renderDashboard() {
   var df = getDashboardDateFilter();
   var customers = filterByDate(getVisibleCustomers(), df.from, df.to);
   const total = customers.length;
-  const active = customers.filter(function(c) { return ACTIVE_STAGES.includes(c.stage); }).length;
   // 预计订单数量：进行中客户按首提数量（预计成交时间在筛选范围内）+ 已签约客户本季度计划出货数量
   var orderQty = 0;
   // 进行中客户：按首提数量，预计成交时间在筛选范围内
@@ -2381,7 +2374,6 @@ function renderDashboard() {
   }).reduce(function(s, c) { return s + (Number(c.quarterlyPlanQty) || 0); }, 0);
 
   document.getElementById('statTotal').textContent = total;
-  document.getElementById('statActive').textContent = active;
   // 中意向：需求分析、价格磋商
   var medium = customers.filter(function(c) { return c.stage === 'needs_analysis' || c.stage === 'price_negotiation'; }).length;
   document.getElementById('statMedium').textContent = medium;
