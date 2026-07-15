@@ -2788,6 +2788,11 @@ async function saveCustomer() {
     return;
   }
   const u = AppState.currentUser;
+  // 非管理员选择已签约 → 自动转为待审核
+  if (data.stage === 'signed' && u.role !== 'manager') {
+    data.stage = 'pending_approval';
+    toast('\u{1F6AB} \u5DF2\u63D0\u4EA4\u5BA1\u6838\uFF0C\u8BF7\u7B49\u5F85\u7BA1\u7406\u5458\u5BA1\u6279', 'info');
+  }
   try {
     if (id) {
       data.id = id;
