@@ -1377,7 +1377,7 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
             <button class="btn btn-sm btn-ghost" id="dashClearFilterBtn" style="padding:4px 10px;font-size:.8rem;">清除</button>
           </div>
         </div>
-        <div class="dashboard-grid" id="statCards">
+        <div class="dashboard-grid" id="statCardsFirst">
           <div class="stat-card clickable" data-dash="total">
             <div class="stat-icon blue">&#x1F4CC;</div>
             <div class="label">总客户数</div>
@@ -1402,6 +1402,14 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
             <div class="value" id="statHigh">0</div>
             <div class="sub">样机推进 & 签约中</div>
           </div>
+          <div class="stat-card clickable" data-dash="orders">
+            <div class="stat-icon emerald">&#x1F4B0;</div>
+            <div class="label">预计订单数量</div>
+            <div class="value" id="statBudget">0 单</div>
+            <div class="sub">按计划成交时间统计</div>
+          </div>
+        </div>
+        <div class="dashboard-grid" id="statCardsSecond" style="margin-top:12px;grid-template-columns:repeat(2,1fr);">
           <div class="stat-card clickable" data-dash="long_term">
             <div class="stat-icon" style="background:#e0e7ff;color:#6366f1;">&#x1F504;</div>
             <div class="label">长期跟进</div>
@@ -1413,12 +1421,6 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
             <div class="label">停止跟进</div>
             <div class="value" id="statStopped">0</div>
             <div class="sub">已停止跟进的客户</div>
-          </div>
-          <div class="stat-card clickable" data-dash="orders">
-            <div class="stat-icon emerald">&#x1F4B0;</div>
-            <div class="label">预计订单数量</div>
-            <div class="value" id="statBudget">0 单</div>
-            <div class="sub">按计划成交时间统计</div>
           </div>
         </div>
         <div class="dashboard-bottom">
