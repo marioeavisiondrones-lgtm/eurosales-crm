@@ -170,7 +170,7 @@ function saveUsers(data) { writeJSON(USERS_FILE, data); }
 function getDefaultUsers() {
   return [{
     id: 1, name: '主管理员', role: 'manager', avatar: '主',
-    username: 'admin', password: 'admin123', email: 'admin@eavision.com',
+    username: 'admin', password: 'admin123', email: 'mario.jiang@eavision.com',
     mustChangePassword: false, createdAt: new Date().toISOString()
   }];
 }
@@ -422,16 +422,21 @@ async function handler(req, res) {
       // ========== 重置管理员密码 ==========
       case 'reset-admin': {
         if (req.method === 'POST') {
+          const body = tryParseJSON(req.body);
           const users = getUsers();
           const admin = users.find(u => u.id === 1);
-          if (admin) {
-            admin.password = 'admin123'; // 明文保留，兼容旧版
-            admin.mustChangePassword = true;
-            admin.updatedAt = now();
-            saveUsers(users);
-            return sendJSON(res, { success: true, message: '管理员密码已重置为 admin123' });
+          if (!admin) return sendJSON(res, { error: '管理员用户不存在' }, 404);
+          // 邮箱验证
+          const expectedEmail = 'mario.jiang@eavision.com';
+          const inputEmail = (body && body.email || '').trim().toLowerCase();
+          if (inputEmail !== expectedEmail.toLowerCase()) {
+            return sendJSON(res, { error: '邮箱验证失败，请输入正确的管理员邮箱' }, 403);
           }
-          return sendJSON(res, { error: '管理员用户不存在' }, 404);
+          admin.password = 'admin123';
+          admin.mustChangePassword = true;
+          admin.updatedAt = now();
+          saveUsers(users);
+          return sendJSON(res, { success: true, message: '管理员密码已重置为 admin123' });
         }
         break;
       }

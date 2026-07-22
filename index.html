@@ -1319,12 +1319,15 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
       <button class="modal-close" id="resetPwdCloseBtn">&times;</button>
     </div>
     <div class="modal-body">
-      <p style="color:var(--navy-400);margin-bottom:16px;font-size:.85rem;line-height:1.5;">确认将管理员账号 <strong>admin</strong> 的密码重置为默认密码？重置后首次登录需再次修改密码。</p>
+      <p style="color:var(--navy-400);margin-bottom:16px;font-size:.85rem;line-height:1.5;">请输入管理员邮箱 <strong>mario.jiang@eavision.com</strong> 验证身份后重置密码。</p>
+      <div class="form-group" style="margin-bottom:8px;">
+        <input type="email" id="resetPwdEmail" placeholder="请输入管理员邮箱" style="width:100%;padding:8px 12px;border:1px solid var(--navy-200);border-radius:var(--radius-sm);font-size:.85rem;font-family:var(--font-sans);outline:none;box-sizing:border-box;">
+      </div>
       <div class="login-error" id="resetPwdError"></div>
     </div>
     <div class="modal-footer" style="display:flex;gap:8px;justify-content:flex-end;">
       <button class="btn btn-ghost" id="resetPwdCancelBtn">取消</button>
-      <button class="btn btn-primary" id="resetPwdConfirmBtn">确认重置</button>
+      <button class="btn btn-primary" id="resetPwdConfirmBtn">验证并重置</button>
     </div>
   </div>
 </div>
@@ -2190,12 +2193,20 @@ function showResetPwdModal() {
 async function confirmResetPwd() {
   const errorEl = document.getElementById('resetPwdError');
   errorEl.textContent = '';
+  const email = document.getElementById('resetPwdEmail').value.trim();
+  if (!email) {
+    errorEl.textContent = '请输入管理员邮箱';
+    return;
+  }
   try {
-    const result = await api('POST', '/api/reset-admin', {});
+    const result = await api('POST', '/api/reset-admin', { email: email });
     if (result.success) {
       document.getElementById('resetPwdModal').classList.remove('active');
       document.getElementById('loginError').textContent = '';
-      toast('密码已重置为: admin123，请使用新密码登录', 'success');
+      document.getElementById('resetPwdEmail').value = '';
+      toast('邮箱验证通过，密码已重置为: admin123，请使用新密码登录', 'success');
+    } else {
+      errorEl.textContent = result.error || '邮箱验证失败';
     }
   } catch (e) {
     errorEl.textContent = e.message || '重置失败，请重试';
