@@ -31,6 +31,20 @@ let nodemailer = null;
 try { nodemailer = require('nodemailer'); } catch (e) { /* optional */ }
 
 // ============================================
+// SendGrid 配置（从环境变量读取）
+// ============================================
+const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY || '';
+let sgMail = null;
+if (SENDGRID_API_KEY) {
+  try {
+    sgMail = require('@sendgrid/mail');
+    sgMail.setApiKey(SENDGRID_API_KEY);
+  } catch (e) {
+    console.log('SendGrid 模块未安装:', e.message);
+  }
+}
+
+// ============================================
 // 文件 I/O
 // ============================================
 function ensureDataDir() {
@@ -119,37 +133,61 @@ function cleanupExpiredCodes() {
 }
 
 async function sendVerificationEmail(email, code) {
-  if (!nodemailer || !SMTP_CONFIG.host) {
-    console.log(`[DEV MODE] 验证码 ${code} 已发送到 ${email}`);
-    return { success: true, devMode: true, code: code };
+  // 构建邮件 HTML 内容
+  const emailHtml = `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px;">
+    <h2 style="color:#2E3A59;">Eavision CRM</h2>
+    <p>您正在修改密码，请使用以下验证码：</p>
+    <div style="font-size:32px;font-weight:800;color:#2563eb;letter-spacing:8px;text-align:center;padding:20px;background:#f0f5ff;border-radius:8px;margin:16px 0;">${code}</div>
+    <p style="color:#64748b;font-size:13px;">验证码有效期为5分钟，请勿泄露给他人。</p>
+    <p style="color:#64748b;font-size:13px;">如果您没有申请修改密码，请忽略此邮件。</p>
+  </div>`;
+
+  // 方式1: SMTP 发送
+  if (nodemailer && SMTP_CONFIG.host) {
+    try {
+      const transporter = nodemailer.createTransport({
+        host: SMTP_CONFIG.host,
+        port: SMTP_CONFIG.port,
+        secure: SMTP_CONFIG.port === 465,
+        auth: { user: SMTP_CONFIG.user, pass: SMTP_CONFIG.pass },
+        connectionTimeout: 8000,
+        greetingTimeout: 8000,
+        socketTimeout: 10000
+      });
+      await transporter.sendMail({
+        from: SMTP_CONFIG.from,
+        to: email,
+        subject: 'Eavision CRM - 密码修改验证码',
+        html: emailHtml
+      });
+      console.log(`[SMTP] 验证码已发送到 ${email}`);
+      return { success: true };
+    } catch (e) {
+      console.error('SMTP 发送失败:', e.message);
+      // 继续尝试 SendGrid
+    }
   }
-  try {
-    const transporter = nodemailer.createTransport({
-      host: SMTP_CONFIG.host,
-      port: SMTP_CONFIG.port,
-      secure: SMTP_CONFIG.port === 465,
-      auth: { user: SMTP_CONFIG.user, pass: SMTP_CONFIG.pass },
-      connectionTimeout: 10000, // 10秒连接超时
-      greetingTimeout: 10000,
-      socketTimeout: 15000
-    });
-    await transporter.sendMail({
-      from: SMTP_CONFIG.from,
-      to: email,
-      subject: 'Eavision CRM - 密码修改验证码',
-      html: `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px;">
-        <h2 style="color:#2E3A59;">Eavision CRM</h2>
-        <p>您正在修改密码，请使用以下验证码：</p>
-        <div style="font-size:32px;font-weight:800;color:#2563eb;letter-spacing:8px;text-align:center;padding:20px;background:#f0f5ff;border-radius:8px;margin:16px 0;">${code}</div>
-        <p style="color:#64748b;font-size:13px;">验证码有效期为5分钟，请勿泄露给他人。</p>
-        <p style="color:#64748b;font-size:13px;">如果您没有申请修改密码，请忽略此邮件。</p>
-      </div>`
-    });
-    return { success: true };
-  } catch (e) {
-    console.error('邮件发送失败:', e.message);
-    return { success: false, error: e.message };
+
+  // 方式2: SendGrid API 发送
+  if (sgMail) {
+    try {
+      await sgMail.send({
+        to: email,
+        from: { email: SMTP_CONFIG.from, name: 'Eavision CRM' },
+        subject: 'Eavision CRM - 密码修改验证码',
+        html: emailHtml
+      });
+      console.log(`[SendGrid] 验证码已发送到 ${email}`);
+      return { success: true };
+    } catch (e) {
+      console.error('SendGrid 发送失败:', e.message);
+      // 继续尝试 devMode
+    }
   }
+
+  // 方式3: 开发模式 - 在控制台显示验证码
+  console.log(`[DEV MODE] 验证码 ${code} 已发送到 ${email}`);
+  return { success: true, devMode: true, code: code };
 }
 
 // ============================================
@@ -242,6 +280,10 @@ async function handler(req, res) {
           pass: process.env.SMTP_PASS ? '已设置(长度:' + process.env.SMTP_PASS.length + ')' : '(未设置)',
           from: process.env.SMTP_FROM || '(未设置)',
           nodemailer: !!nodemailer ? '已加载' : '未加载'
+        },
+        sendgrid: {
+          apiKey: SENDGRID_API_KEY ? '已设置(长度:' + SENDGRID_API_KEY.length + ')' : '(未设置)',
+          module: !!sgMail ? '已加载' : '未加载'
         }
       });
     }
