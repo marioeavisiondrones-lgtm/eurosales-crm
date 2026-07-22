@@ -1516,12 +1516,14 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
         <div class="kanban-toolbar">
           <div class="filters">
             <select class="filter-select" id="kanbanSalesFilter"><option value="all">全部销售</option></select>
-            <select class="filter-select" id="kanbanDateFilter">
-              <option value="all">全部时间</option>
-              <option value="7">近7天</option>
-              <option value="30">近30天</option>
-              <option value="90">近90天</option>
-            </select>
+            <div style="position:relative;display:inline-block;">
+              <input type="date" id="kanbanDateFrom" style="width:140px;padding:6px 10px;border:1px solid var(--navy-200);border-radius:var(--radius-sm);font-size:.78rem;font-family:var(--font-sans);outline:none;">
+              <span style="position:absolute;left:8px;top:50%;transform:translateY(-50%);font-size:.75rem;color:var(--navy-400);display:none;"></span>
+            </div>
+            <span style="font-size:.78rem;color:var(--navy-400);">~</span>
+            <div style="position:relative;display:inline-block;">
+              <input type="date" id="kanbanDateTo" style="width:140px;padding:6px 10px;border:1px solid var(--navy-200);border-radius:var(--radius-sm);font-size:.78rem;font-family:var(--font-sans);outline:none;">
+            </div>
           </div>
           <span style="font-size:.82rem;color:var(--navy-400);">&#x1F4A1; 拖拽卡片可变更客户阶段</span>
         </div>
@@ -1534,6 +1536,7 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
           <div class="filters">
             <select class="filter-select" id="listSalesFilter"><option value="all">全部销售</option></select>
             <select class="filter-select" id="listStageFilter"><option value="all">全部阶段</option></select>
+            <select class="filter-select" id="listCountryFilter"><option value="all">全部国家</option></select>
             <div style="position:relative;display:inline-block;">
               <input type="text" id="listSearchInput" placeholder="&#x1F50D; 搜索公司名/邮箱..." style="width:180px;padding:6px 10px 6px 30px;border:1px solid var(--navy-200);border-radius:var(--radius-sm);font-size:.78rem;font-family:var(--font-sans);outline:none;transition:border-color .15s;">
               <span style="position:absolute;left:8px;top:50%;transform:translateY(-50%);font-size:.78rem;color:var(--navy-400);">&#x1F50D;</span>
@@ -1760,6 +1763,7 @@ Modal - 客户详情
     <div class="modal-footer">
       <button class="btn btn-ghost btn-sm" id="detailEditBtn">&#x270F;&#xFE0F; 编辑</button>
       <button class="btn btn-ghost btn-sm" id="detailReassignBtn" style="display:none;">&#x1F91D; 分配</button>
+      <button class="btn btn-primary btn-sm" id="detailConfirmBtn" style="display:none;">&#x2705; 确认接收</button>
       <button class="btn btn-primary btn-sm" id="detailCloseModalBtn">关闭</button>
     </div>
   </div>
@@ -2119,6 +2123,21 @@ async function loadAllData() {
   }
 }
 
+// 销售确认接收客户
+async function doConfirmCustomer(c) {
+  try {
+    c.confirmed = true;
+    c.confirmedAt = new Date().toISOString();
+    await api('POST', '/api/customers', c);
+    await addActivity(AppState.currentUser.name + ' \u5DF2\u786E\u8BA4\u63A5\u6536\u5BA2\u6237 ' + c.companyName, c.stage);
+    toast('\u5DF2\u786E\u8BA4\u63A5\u6536\u5BA2\u6237');
+    closeModal();
+    refreshAll();
+  } catch (e) {
+    toast('\u786E\u8BA4\u5931\u8D25: ' + e.message, 'error');
+  }
+}
+
 // ============================================
 // 登录逻辑 - 账号密码登录
 // ============================================
@@ -2362,10 +2381,12 @@ function getFilteredCustomers() {
   var list = getVisibleCustomers();
   var sf = document.getElementById('kanbanSalesFilter').value;
   if (sf !== 'all') list = list.filter(function(c) { return c.assignedTo === parseInt(sf) || c.createdBy === parseInt(sf); });
-  var df = document.getElementById('kanbanDateFilter').value;
-  if (df !== 'all') {
-    var cutoff = Date.now() - parseInt(df) * 86400000;
-    list = list.filter(function(c) { return new Date(c.createdAt).getTime() >= cutoff; });
+  var dfFrom = document.getElementById('kanbanDateFrom').value;
+  var dfTo = document.getElementById('kanbanDateTo').value;
+  if (dfFrom || dfTo) {
+    var fromTime = dfFrom ? new Date(dfFrom).getTime() : 0;
+    var toTime = dfTo ? new Date(dfTo + 'T23:59:59').getTime() : Infinity;
+    list = list.filter(function(c) { var t = new Date(c.createdAt).getTime(); return t >= fromTime && t <= toTime; });
   }
   return list;
 }
@@ -2739,9 +2760,14 @@ function renderKanban() {
 function renderKanbanCard(c) {
   const u = getUserName(c.assignedTo || c.createdBy);
   var isAdmin = AppState.currentUser.role === 'manager';
+  var isAssignedSales = !isAdmin && c.assignedTo === AppState.currentUser.id;
+  var needsConfirm = c.confirmed === false;
   var extraActions = '';
   if (c.stage === 'pending_approval' && isAdmin) {
     extraActions = '<div class="card-approval-actions"><button class="btn btn-sm approve-btn" data-id="' + c.id + '" style="background:var(--emerald-500);color:#fff;border:none;padding:3px 10px;border-radius:4px;cursor:pointer;font-size:.75rem;">\u2705 通过</button><button class="btn btn-sm reject-btn" data-id="' + c.id + '" style="background:var(--red-500);color:#fff;border:none;padding:3px 10px;border-radius:4px;cursor:pointer;font-size:.75rem;margin-left:6px;">\u2716 驳回</button></div>';
+  }
+  if (needsConfirm && isAssignedSales) {
+    extraActions = '<div class="card-confirm-actions" style="padding:6px 0 2px;"><button class="btn btn-sm confirm-btn" data-id="' + c.id + '" style="background:var(--accent-500);color:#fff;border:none;padding:3px 12px;border-radius:4px;cursor:pointer;font-size:.75rem;">\u2705 \u786E\u8BA4\u63A5\u6536</button></div>';
   }
   return (
     '<div class="kanban-card" draggable="true" data-id="' + c.id + '">' +
@@ -2754,6 +2780,7 @@ function renderKanbanCard(c) {
       '<div class="card-meta">' +
         '<span class="card-budget">' + ((c.annualQty || 0) > 0 ? c.annualQty + ' \u53F0/\u5E74' : '') + '</span>' +
         '<span class="card-owner">\u{1F464} ' + u + '</span>' +
+        (needsConfirm && isAdmin ? '<span class="card-confirm-badge" style="color:#f59e0b;font-size:.7rem;margin-left:4px;">\u23F3 \u5F85\u786E\u8BA4</span>' : '') +
       '</div>' +
       extraActions +
       (c.stage === 'signed' ? '<div class="card-signed-info">\u{1F69A} \u5DF2\u51FA\u8D27 ' + (c.shippedQty || 0) + ' | \u{1F4C5} \u8BA1\u5212 ' + (c.quarterlyPlanQty || 0) + '</div>' : '') +
@@ -2851,6 +2878,23 @@ function setupDragDrop() {
       dragSrc = null;
     });
   });
+  // 确认接收
+  document.querySelectorAll('.confirm-btn').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      var id = btn.dataset.id;
+      var c = AppState.customers.find(function(c) { return c.id === id; });
+      if (!c) return;
+      c.confirmed = true;
+      c.confirmedAt = new Date().toISOString();
+      api('POST', '/api/customers', c).then(function() {
+        return addActivity(AppState.currentUser.name + ' \u5DF2\u786E\u8BA4\u63A5\u6536\u5BA2\u6237 ' + c.companyName, c.stage);
+      }).then(function() {
+        toast('\u5DF2\u786E\u8BA4\u63A5\u6536\u5BA2\u6237');
+        refreshAll();
+      });
+    });
+  });
   // 展开/折叠展开卡片
   document.querySelectorAll('.expand-hint').forEach(function(el) {
     el.addEventListener('click', function(e) {
@@ -2871,6 +2915,8 @@ function renderList() {
   if (sf !== 'all') customers = customers.filter(function(c) { return c.assignedTo === parseInt(sf) || c.createdBy === parseInt(sf); });
   var stf = document.getElementById('listStageFilter').value;
   if (stf !== 'all') customers = customers.filter(function(c) { return c.stage === stf; });
+  var cf = document.getElementById('listCountryFilter').value;
+  if (cf !== 'all') customers = customers.filter(function(c) { return c.country === cf; });
   var sq = document.getElementById('listSearchInput').value.trim().toLowerCase();
   if (sq) {
     customers = customers.filter(function(c) {
@@ -2885,15 +2931,17 @@ function renderList() {
     wrap.innerHTML = '<div class="empty-state"><div class="empty-icon">\u{1F4CB}</div><h3>\u6682\u65E0\u5BA2\u6237\u6570\u636E</h3><p>\u70B9\u51FB\u53F3\u4E0A\u89D2\u201C\u65B0\u589E\u5BA2\u6237\u201D\u5F00\u59CB\u5F55\u5165\u3002</p></div>';
     return;
   }
-  var html = '<table class="list-table"><thead><tr><th>\u516C\u53F8</th><th>\u8054\u7CFB\u4EBA</th><th>\u9636\u6BB5</th><th>\u5E74\u6846</th><th>\u5361\u70B9</th><th>\u8D1F\u8D23\u4EBA</th><th>\u5F55\u5165\u65F6\u95F4</th><th>\u64CD\u4F5C</th></tr></thead><tbody>';
+  var html = '<table class="list-table"><thead><tr><th>\u516C\u53F8</th><th>\u8054\u7CFB\u4EBA</th><th>\u9636\u6BB5</th><th>\u56FD\u5BB6</th><th>\u5E74\u6846</th><th>\u5361\u70B9</th><th>\u8F6C\u4EA4</th><th>\u8D1F\u8D23\u4EBA</th><th>\u5F55\u5165\u65F6\u95F4</th><th>\u64CD\u4F5C</th></tr></thead><tbody>';
   customers.sort(function(a,b) { return new Date(b.createdAt) - new Date(a.createdAt); }).forEach(function(c) {
     var contacts = [c.contactName, c.contact2Name, c.contact3Name].filter(Boolean).join(', ');
     html += '<tr data-id="' + c.id + '">' +
       '<td class="company-cell">' + (c.companyName || '') + '</td>' +
       '<td>' + contacts + '</td>' +
       '<td><span class="stage-badge ' + getStageBadgeClass(c.stage) + '">' + getStageIcon(c.stage) + ' ' + getStageLabel(c.stage) + '</span></td>' +
+      '<td>' + (c.country || '\u2014') + '</td>' +
       '<td>' + ((c.annualQty || 0) > 0 ? c.annualQty + ' \u53F0' : '\u2014') + '</td>' +
       '<td>' + (c.blocker ? '\u26A0\uFE0F \u6709\u5361\u70B9' : '\u2014') + '</td>' +
+      '<td>' + (c.confirmed === false ? '<span style="color:#f59e0b;font-size:.75rem;">\u23F3 \u5F85\u786E\u8BA4</span>' : '<span style="color:var(--emerald-500);font-size:.75rem;">\u2705</span>') + '</td>' +
       '<td>' + getUserName(c.assignedTo || c.createdBy) + '</td>' +
       '<td>' + formatDateShort(c.createdAt) + '</td>' +
       '<td>' +
@@ -3108,6 +3156,7 @@ function showDetail(id) {
     '<div class="detail-item full"><div class="label">\u5F53\u524D\u5361\u70B9</div><div class="value">' + (c.blocker || '\u65E0') + '</div></div>' +
     '<div class="detail-item full"><div class="label">\u8DDF\u8FDB\u5907\u6CE8</div><div class="value">' + (c.notes || '\u65E0') + '</div></div>' +
     '<div class="detail-item"><div class="label">\u8D1F\u8D23\u4EBA</div><div class="value">' + u + '</div></div>' +
+    '<div class="detail-item"><div class="label">\u8F6C\u4EA4\u72B6\u6001</div><div class="value">' + (c.confirmed === false ? '<span style="color:#f59e0b;">\u23F3 \u5F85\u786E\u8BA4</span>' : '<span style="color:var(--emerald-500);">\u2705 \u5DF2\u786E\u8BA4</span>') + '</div></div>' +
     '<div class="detail-item"><div class="label">\u5F55\u5165\u65F6\u95F4</div><div class="value">' + formatDateShort(c.createdAt) + '</div></div>';
   document.getElementById('detailEditBtn').onclick = function() { closeModal(); openEditModal(id); };
   // 管理员显示分配按钮
@@ -3117,6 +3166,14 @@ function showDetail(id) {
     reassignBtn.onclick = function() { openReassignModal(id); };
   } else {
     reassignBtn.style.display = 'none';
+  }
+  // 销售确认接收按钮
+  var confirmBtn = document.getElementById('detailConfirmBtn');
+  if (AppState.currentUser.role !== 'manager' && c.assignedTo === AppState.currentUser.id && c.confirmed === false) {
+    confirmBtn.style.display = '';
+    confirmBtn.onclick = function() { doConfirmCustomer(c); };
+  } else {
+    confirmBtn.style.display = 'none';
   }
   document.getElementById('detailModal').classList.add('active');
 }
@@ -3157,6 +3214,8 @@ async function doReassignCustomer(e) {
     if (!c) { errEl.textContent = '客户不存在'; return; }
     var targetUser = AppState.users.find(function(u) { return u.id === targetUserId; });
     c.assignedTo = targetUserId;
+    c.confirmed = false;
+    c.confirmedAt = null;
     await api('POST', '/api/customers', c);
     await addActivity(AppState.currentUser.name + ' \u5C06 ' + c.companyName + ' \u5206\u914D\u7ED9 ' + targetUser.name, c.stage);
     toast('\u5BA2\u6237\u5DF2\u6210\u529F\u5206\u914D\u7ED9 ' + targetUser.name);
@@ -3354,8 +3413,18 @@ async function initApp() {
   STAGES.forEach(function(s) {
     sf3.innerHTML += '<option value="' + s.id + '">' + s.icon + ' ' + s.label + '</option>';
   });
-  document.getElementById('kanbanDateFilter').onchange = renderKanban;
+  document.getElementById('kanbanDateFrom').onchange = renderKanban;
+  document.getElementById('kanbanDateTo').onchange = renderKanban;
   sf3.onchange = renderList;
+  // 填充国家筛选
+  var cFilter = document.getElementById('listCountryFilter');
+  var countries = new Set();
+  AppState.customers.forEach(function(c) { if (c.country) countries.add(c.country); });
+  var sortedCountries = Array.from(countries).sort();
+  sortedCountries.forEach(function(country) {
+    cFilter.innerHTML += '<option value="' + country + '">' + country + '</option>';
+  });
+  cFilter.onchange = renderList;
   document.getElementById('listSearchInput').oninput = renderList;
 }
 
