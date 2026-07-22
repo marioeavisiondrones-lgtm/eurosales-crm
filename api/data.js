@@ -128,7 +128,10 @@ async function sendVerificationEmail(email, code) {
       host: SMTP_CONFIG.host,
       port: SMTP_CONFIG.port,
       secure: SMTP_CONFIG.port === 465,
-      auth: { user: SMTP_CONFIG.user, pass: SMTP_CONFIG.pass }
+      auth: { user: SMTP_CONFIG.user, pass: SMTP_CONFIG.pass },
+      connectionTimeout: 10000, // 10秒连接超时
+      greetingTimeout: 10000,
+      socketTimeout: 15000
     });
     await transporter.sendMail({
       from: SMTP_CONFIG.from,
