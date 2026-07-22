@@ -229,6 +229,20 @@ async function handler(req, res) {
   const resource = pathParts[0] || '';
 
   try {
+    // 调试端点：检查 SMTP 配置
+    if (resource === 'debug') {
+      return sendJSON(res, {
+        smtp: {
+          host: process.env.SMTP_HOST || '(未设置)',
+          port: process.env.SMTP_PORT || '(未设置)',
+          user: process.env.SMTP_USER || '(未设置)',
+          pass: process.env.SMTP_PASS ? '已设置(长度:' + process.env.SMTP_PASS.length + ')' : '(未设置)',
+          from: process.env.SMTP_FROM || '(未设置)',
+          nodemailer: !!nodemailer ? '已加载' : '未加载'
+        }
+      });
+    }
+
     switch (resource) {
 
       // ========== 客户 CRUD ==========
@@ -300,7 +314,7 @@ async function handler(req, res) {
           // 清理过期验证码
           cleanupExpiredCodes();
 
-          // 检查邮箱是否属于某个用户（非登录页重置时校验）
+          // 如果 checkUser 为 true，验证邮箱是否与某个用户匹配
           if (body.checkUser) {
             const users = getUsers();
             if (!users.find(u => u.email === body.email)) {
