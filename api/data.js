@@ -121,7 +121,7 @@ function cleanupExpiredCodes() {
 async function sendVerificationEmail(email, code) {
   if (!nodemailer || !SMTP_CONFIG.host) {
     console.log(`[DEV MODE] 验证码 ${code} 已发送到 ${email}`);
-    return { success: true, devMode: true };
+    return { success: true, devMode: true, code: code };
   }
   try {
     const transporter = nodemailer.createTransport({
@@ -321,8 +321,9 @@ async function handler(req, res) {
           if (result.success) {
             return sendJSON(res, {
               success: true,
-              message: result.devMode ? '验证码已发送（开发模式，见控制台）' : '验证码已发送到您的邮箱',
-              devMode: !!result.devMode
+              message: result.devMode ? '开发模式，验证码见控制台' : '验证码已发送到您的邮箱',
+              devMode: !!result.devMode,
+              code: result.devMode ? result.code : undefined
             });
           }
           return sendJSON(res, { error: '邮件发送失败: ' + (result.error || '未知错误') }, 500);

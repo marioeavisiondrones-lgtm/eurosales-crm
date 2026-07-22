@@ -2325,7 +2325,11 @@ async function sendProfileVerificationCode() {
   try {
     const result = await api('POST', '/api/send-verification-code', { email: email, checkUser: true });
     if (result.success) {
-      toast(result.message || '\u9A8C\u8BC1\u7801\u5DF2\u53D1\u9001', 'success');
+      if (result.devMode && result.code) {
+        toast('\u9A8C\u8BC1\u7801: ' + result.code + ' \uFF08\u5F00\u53D1\u6A21\u5F0F\uFF09', 'success');
+      } else {
+        toast(result.message || '\u9A8C\u8BC1\u7801\u5DF2\u53D1\u9001\u5230\u90AE\u7BB1', 'success');
+      }
       let countdown = 60;
       if (verificationTimer) clearInterval(verificationTimer);
       verificationTimer = setInterval(function() {
